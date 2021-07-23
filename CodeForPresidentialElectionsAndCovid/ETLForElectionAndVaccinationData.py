@@ -1883,7 +1883,19 @@ def createCombinedVaccinationAndDeltaVariantTrend():
                 state selected in a choropleth map displayed above it since the click selector of the choropleth map 
                 is added to the timeseries chart.
 
-                Tootltips are created to display the number of cases all through the timeseries         
+                Tootltips are created to display the number of cases all through the timeseries       
+
+                Input: None
+                Output: 
+                vaccine_chart - The choropleth of US geography colored by vaccination population pct.
+                us_timeseries - Timeseries of average US covid cases after emergence of Delta variant
+                state_cases_delta_chart - Timeseries of State covid cases after emergence of Delta variant
+                state_selectors (Hidden selectors for display of tooltip)
+                rules - Tooltip rule line
+                tooltip_text1 (Tooltip for state 1)
+                tooltip_text2 (Tooltip for state 2)
+                tooltip_text3 (Tooltip for US timeline)
+                points (Points to display the tootip text)  
         """
 
     # Retrieve the data
