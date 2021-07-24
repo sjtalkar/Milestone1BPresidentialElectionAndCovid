@@ -1,8 +1,23 @@
 # Milestone1BPresidentialElectionAndCovid
 Data and code for Presidential Election and Covid study
 
+## Datasets
 
-### Further analysis thoughts
+| Name | Description | Key Variables | Size | Shape | Format | Access |
+|---|---|---|---|---|---|---|
+| State presidential election results dataset | *"This data file contains constituency (state-level) returns for elections to the U.S. presidency from 1976 to 2020"* | `year, candidatevotes, totalvotes` | 500KB | 4287 x 15 | CSV | [Harvard Dataverse website](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/42MVDX) |
+| County presidential election results dataset | *"This dataset contains county-level returns for presidential elections from 2000 to 2020"* | `year, county_fips, county_name, party` | 7.4MB | 72603 x 12 | CSV | [Harvard Dataverse website](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ) |
+| COVID-19 cases and death rolling averages|This dataset issued by the New York Times *"contains the daily number of new cases and deaths, the seven-day rolling average and the seven-day rolling average per 100,000 residents"* for all counties in the U.S. | `date, geoid, county, state, cases_avg_per_100k, deaths_avg_per_100k` | >85MB | >146M x 10 | CSV | [The New York Times GitHub page](https://github.com/nytimes/covid-19-data/tree/master/rolling-averages)|
+| State level total COVID-19 vaccine dataset | This dataset issued by the US Centers for Disease Control and Prevention (CDC) contains the total COVID-19 Vaccine deliveries and administration data at the state level.| `State/Territory/Federal Entity, People with at least One Dose by State of Residence, Percent of Total Pop with at least One Dose by State of Residence` | 28KB | 63 x 62 | CSV | [The U.S. Centers for Disease Control website](https://covid.cdc.gov/covid-data-tracker/#vaccinations) |
+| County level daily COVID-19 vaccine dataset | This dataset issued by the US Centers for Disease Control and Prevention (CDC) contains the daily COVID-19 Vaccine deliveries and administration data at the county level. | `date, location, mmwr_week, administered_dose1_recip, administered_dose1_pop_pct` | 4.4MB | >14,400 x 69 | CSV | [The U.S. Centers for Disease Control website](https://data.cdc.gov/Vaccinations/COVID-19-Vaccinations-in-the-United-States-Jurisdi/unsk-b7fc) |
+| Mask-wearing survey dataset | This dataset is an estimate of mask usage by county in the United States released by The New York Times. It “comes from a large number of interviews conducted online“ in 2020 between July 2nd and July 14th. | `ever, rarely, sometimes, frequently, always` | 109KB | 3143 x 6 | CSV | [The New York Times GitHub page](https://github.com/nytimes/covid-19-data/tree/master/mask-use) |
+| Census Bureau population census and estimates dataset | This dataset contains the 2010 population census data per county and the 2011~2020 population estimates. We are mainly interested in the 2020 estimates | `SUMLEV, STATE, STNAME, CTYNAME, POPESTIMATE2020` | 3.7MB | 3195 x 180 | CSV | [U.S. Census Bureau website](https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-counties-total.html) |
+| Unemployment rate dataset | The dataset is the collection of labor force county data tables for 2020 issued by the U.S. Bureau of Labor Statistics | `county name, unemployment rate` | 1.17MB | 3219 x 9 | XLS | [Bureau of Labor Statistics website](https://www.bls.gov/lau/tables.htm) |
+| Census Urban and Rural dataset | The dataset classifies all the counties in the U.S. as rural or urban areas |`-`|-| x | XLS | [U.S. Census Bureau website](https://www.census.gov/programs-surveys/geography/guidance/geo-areas/urban-rural.html) |
+|-|-| `` |-| x | CSV | [-]() |
+|-|-| `` |-| x | CSV | [-]() |
+
+## Further analysis thoughts
 
 Vaccination is the best protection against Delta.“All viruses evolve over time and undergo changes as they spread and replicate,” 
 
