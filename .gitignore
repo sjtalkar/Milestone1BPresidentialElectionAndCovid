@@ -1,0 +1,5 @@
+.venv
+.idea
+
+**/altair-data*.json
+**/.ipynb_checkpoints
