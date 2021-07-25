@@ -366,9 +366,12 @@ def getElectionData():
     # Merge 2016 and 2020 dataframes on state and county
     election_winners_df = election_2020_winners_df.merge(
         election_2016_winners_df,
-        how="inner",
-        on=["state", "state_po", "CTYNAME", "COUNTYFP"],
+        how="left",
+        on=["COUNTYFP"],
     )
+    
+    election_winners_df.drop(columns=["state_y", "state_po_y", "CTYNAME_y"], inplace=True)
+    election_winners_df.rename(columns={"state_x": "state", "state_po_x": "state_po", "CTYNAME_x": "CTYNAME"}, inplace=True)
 
     return election_winners_df
 
