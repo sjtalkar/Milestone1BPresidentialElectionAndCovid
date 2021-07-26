@@ -365,13 +365,16 @@ def getElectionData():
 
     # Merge 2016 and 2020 dataframes on state and county
     election_winners_df = election_2020_winners_df.merge(
-        election_2016_winners_df,
-        how="left",
-        on=["COUNTYFP"],
+        election_2016_winners_df, how="left", on=["COUNTYFP"],
     )
-    
-    election_winners_df.drop(columns=["state_y", "state_po_y", "CTYNAME_y"], inplace=True)
-    election_winners_df.rename(columns={"state_x": "state", "state_po_x": "state_po", "CTYNAME_x": "CTYNAME"}, inplace=True)
+
+    election_winners_df.drop(
+        columns=["state_y", "state_po_y", "CTYNAME_y"], inplace=True
+    )
+    election_winners_df.rename(
+        columns={"state_x": "state", "state_po_x": "state_po", "CTYNAME_x": "CTYNAME"},
+        inplace=True,
+    )
 
     return election_winners_df
 
@@ -1844,8 +1847,23 @@ def plotStateVaccinePct(df, date_in):
     click = alt.selection_multi(fields=["STATEFP"], init=[{"STATEFP": 1}])
 
     chart = (
-        alt.Chart(us_states)
-        .mark_geoshape()
+        alt.Chart(
+            us_states,
+            title={
+                "text": [
+                    "Vaccination: Population percent with atleast one vaccine shot"
+                ],
+                "subtitle": [
+                    "Hover for tooltip with state and vaccination percent value",
+                    "Shift+Click for multiple state selections",
+                ],
+                "color": "black",
+                "subtitleColor": "lightgrey",
+                "fontSize": 14,
+                "fontWeight": "bold",
+            },
+        )
+        .mark_geoshape(stroke="lightgrey")
         .encode(
             color=alt.condition(
                 click,
@@ -1937,7 +1955,57 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     us_base = getBaseChart(
         us_case_rolling_df, [state_vaccine_df.date.min(), state_vaccine_df.date.max()]
     )
-    us_timeseries = us_base.mark_line(strokeDash=[6, 2], strokeWidth=3, color="black")
+    us_timeseries = us_base.mark_line(
+        strokeDash=[2, 6], strokeWidth=3, color="black"
+    ).encode(tooltip=[alt.Tooltip("geoid:N", title="US Country Average Cases:")])
+
+    # Create a "mean" cases timeseries chart of two segments - Stayed Democrat and Stayed Republican
+    party_cases_timeseries_df = (
+        state_case_rolling_df.groupby(
+            ["date", "party_simplified", "party_simplified_color"]
+        )
+        .agg(
+            cases_avg_per_100k=("cases_avg_per_100k", "mean"),
+            deaths_avg_per_100k=("deaths_avg_per_100k", "mean"),
+        )
+        .reset_index()
+    )
+
+    # Democrat Mean
+    stayed_democrat_base = getBaseChart(
+        party_cases_timeseries_df[
+            party_cases_timeseries_df["party_simplified"] == "STAYED_DEMOCRAT"
+        ],
+        [state_vaccine_df.date.min(), state_vaccine_df.date.max()],
+    )
+
+    stayed_democrat_timeseries = stayed_democrat_base.mark_line(
+        strokeDash=[6, 2], strokeWidth=4, color="blue"
+    ).encode(
+        tooltip=[
+            alt.Tooltip(
+                "cases_avg_per_100k:Q", title="Stayed Democrat State Average Cases:"
+            ),
+        ]
+    )
+
+    # Republican Mean
+    stayed_republican_base = getBaseChart(
+        party_cases_timeseries_df[
+            party_cases_timeseries_df["party_simplified"] == "STAYED_REPUBLICAN"
+        ],
+        [state_vaccine_df.date.min(), state_vaccine_df.date.max()],
+    )
+
+    stayed_republican_timeseries = stayed_republican_base.mark_line(
+        strokeDash=[6, 2], strokeWidth=4, color="red"
+    ).encode(
+        tooltip=[
+            alt.Tooltip(
+                "cases_avg_per_100k:Q", title="Stayed Republican State Average Cases:"
+            ),
+        ]
+    )
 
     # Create the dropdown selector for state names
     input_dropdown = alt.binding_select(
@@ -1946,7 +2014,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         name="State: ",
     )
     dropdown_selection = alt.selection_single(
-        fields=["state"], bind=input_dropdown, name="State: ", init={"state": "Alaska"}
+        fields=["state"], bind=input_dropdown, name="State: ", init={"state": "None"}
     )
 
     # Each timeline will be colored by state affiliation
@@ -2076,22 +2144,45 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         .transform_filter(click)
     )
 
-    # Draw text labels near the points, and highlight based on selection
-    tooltip_text3 = (
-        us_timeseries.mark_text(
-            align="left",
-            dx=-60,
-            dy=-15,
-            fontSize=15,
-            # fontWeight="bold",
-            lineBreak="\n",
-        )
-        .encode(
-            text=alt.condition(
-                nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
-            ),
-        )
-        .transform_filter(click)
+    # US Time series Draw text labels near the points, and highlight based on selection
+    tooltip_text3 = us_timeseries.mark_text(
+        align="left",
+        dx=-60,
+        dy=-15,
+        fontSize=15,
+        # fontWeight="bold",
+        lineBreak="\n",
+    ).encode(
+        text=alt.condition(
+            nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
+        ),
+    )
+
+    # Stayed Democrat Time series Draw text labels near the points, and highlight based on selection
+    tooltip_text4 = stayed_democrat_timeseries.mark_text(
+        align="left",
+        dx=-60,
+        dy=-15,
+        fontSize=15,
+        # fontWeight="bold",
+        lineBreak="\n",
+    ).encode(
+        text=alt.condition(
+            nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
+        ),
+    )
+
+    tooltip_text5 = stayed_republican_timeseries.mark_text(
+        align="left",
+        dx=-60,
+        dy=-15,
+        fontSize=15,
+        # fontWeight="bold",
+        lineBreak="\n",
+    ).encode(
+        text=alt.condition(
+            nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
+        ),
     )
 
     # Draw a rule at the location of the selection
@@ -2105,12 +2196,16 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     return (
         vaccine_chart,
         us_timeseries,
+        stayed_democrat_timeseries,
+        stayed_republican_timeseries,
         state_cases_delta_chart,
         state_selectors,
         rules,
         tooltip_text1,
         tooltip_text2,
         tooltip_text3,
+        tooltip_text4,
+        tooltip_text5,
         points,
     )
 
