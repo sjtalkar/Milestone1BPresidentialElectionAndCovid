@@ -2210,7 +2210,245 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     )
 
 
+############################################################################################################
+######################Mask Data Charts with interactive legend
+############################################################################################################
+def getMaskUsageRange(mask_usage):
+    """This function creates ranges for percentage mask usage
+       The three ranges created are "Average (<=50%)", "Above average (50%-80%)" and "Exceptional (> 80%)"
+
+    Args:
+        mask_usage ([float]): [Estimated mask usage value]
+
+    Returns:
+        [string]: [Range of usage]
+    """
+    if mask_usage <= 0.5:
+        return "Average (<=50%)"
+    elif mask_usage > 0.5 and mask_usage <= 0.8:
+        return "Above average (50%-80%)"
+    else:
+        return "Exceptional (> 80%)"
+
+
+def getColorRangeMaskUsage(segmentname, mask_usage_range):
+    """[This function comverts a combination of political affiliation and mask usage range into a color]
+
+    Args:
+        segmentname ([String]): [Democrat/Republican]
+        mask_usage_range ([type]): [Ranges of mask uasge percentage]
+
+    Returns:
+        [string]: [Hex Code of color]
+    """
+    legend_dict = {
+        ("Democrat", "Average (<=50%)"): "#C5DDF9",
+        ("Democrat", "Above average (50%-80%)"): "#3CA0EE",
+        ("Democrat", "Exceptional (> 80%)"): "#0015BC",
+        ("Republican", "Average (<=50%)"): "#F2A595",
+        ("Republican", "Above average (50%-80%)"): "#EE8778",
+        ("Republican", "Exceptional (> 80%)"): "#FE0000",
+    }
+    return legend_dict[(segmentname, mask_usage_range)]
+
+
+def createDataForFreqAndInFreqMaskUse():
+    """[This function creates three dataframes]
+
+    Returns:
+        [Pandas dataframes]: [A consolidated dataframe, frequent mask usage dataframe and infrequent mask usage dataframe]
+    """
+    county_pop_mask_df = createFrequentAndInfrequentMaskUsers()
+    county_pop_mask_df["segmentname"] = county_pop_mask_df["changecolor"].map(
+        color_segment_dict
+    )
+    county_pop_mask_df.segmentname = county_pop_mask_df.segmentname.str.replace(
+        "Stayed ", ""
+    )
+    county_pop_mask_df.segmentname = county_pop_mask_df.segmentname.str.replace(
+        "To ", ""
+    )
+
+    county_pop_mask_df = county_pop_mask_df[
+        ["STATE", "COUNTYFP", "CTYNAME", "mask_usage_type", "mask_usage", "segmentname"]
+    ].copy()
+    county_pop_mask_df["mask_usage_range"] = county_pop_mask_df["mask_usage"].apply(
+        lambda x: getMaskUsageRange(x)
+    )
+
+    county_pop_mask_df["range_color"] = county_pop_mask_df[
+        ["segmentname", "mask_usage_range"]
+    ].apply(
+        lambda x: getColorRangeMaskUsage(x["segmentname"], x["mask_usage_range"]),
+        axis=1,
+    )
+
+    county_pop_mask_freq_df = county_pop_mask_df[
+        county_pop_mask_df["mask_usage_type"] == "FREQUENT"
+    ].copy()
+    county_pop_mask_infreq_df = county_pop_mask_df[
+        county_pop_mask_df["mask_usage_type"] == "NOT FREQUENT"
+    ].copy()
+    return county_pop_mask_df, county_pop_mask_freq_df, county_pop_mask_infreq_df
+
+
 #########################################################################################
+
+
+def createFreqCountyMaskUsageWithRanges(type):
+    """[This function accepts the type of Mask usage - Frequent or Infrequent and creates a
+        Geo chart with colors based o nrange of frequent mask usage]
+
+    Args:
+        type ([string]): ["FREQUENT"/"NON FREQUENT"]
+
+    Returns:
+        [type]: [description]
+    """
+
+    counties = alt.topo_feature(data.us_10m.url, "counties")
+    # Setup interactivty
+    click = alt.selection_single(
+        fields=["range_color"], init={"range_color": "#FE0000"}
+    )
+
+    (
+        county_pop_mask_df,
+        county_pop_mask_freq_df,
+        county_pop_mask_infreq_df,
+    ) = createDataForFreqAndInFreqMaskUse()
+
+    if type == "FREQUENT":
+        source = county_pop_mask_freq_df
+    else:
+        source = county_pop_mask_infreq_df
+
+    county_mask_chart = (
+        alt.Chart(
+            counties,
+            title={
+                "text": [
+                    f"{type.capitalize()} Mask Usage From Survey Response by County and Political Affiliation"
+                ],
+                "subtitle": [
+                    "Hover for tooltip with state and mask usage percent value",
+                    "Click on legend colors for selecting counties with given political affiliation",
+                    "and chosen range of mask usage",
+                ],
+            },
+        )
+        .mark_geoshape(stroke="#706545", strokeWidth=0.1)
+        .encode(
+            color=alt.condition(
+                click, alt.value("#252324"), alt.Color("range_color:N", scale=None),
+            ),
+            tooltip=[
+                # alt.Tooltip('state:N', title='State: '),
+                alt.Tooltip("CTYNAME:N", title="County name: "),
+                alt.Tooltip("mask_usage_type:N", title="Mask Usage Type: "),
+                alt.Tooltip("mask_usage:Q", title="Mask Usage Percent: ", format=".0%"),
+            ],
+        )
+        .transform_lookup(
+            lookup="id",
+            from_=alt.LookupData(
+                source,
+                "COUNTYFP",
+                [
+                    "COUNTYFP",
+                    "CTYNAME",
+                    "mask_usage_type",
+                    "mask_usage",
+                    "mask_usage_range",
+                    "range_color",
+                ],
+            ),
+        )
+        .add_selection(click)
+        .project(type="albersUsa")
+        .properties(width=750, height=500)
+    )
+
+    # Create interactive model name legend
+    legend_democrat = (
+        alt.Chart(
+            source[source["segmentname"] == "Democrat"],
+            title="Counties that voted Democrat in 2020",
+        )
+        .mark_point(size=100, filled=True)
+        .encode(
+            y=alt.Y(
+                "mask_usage_range:N",
+                axis=alt.Axis(orient="right"),
+                title=None,
+                sort=[
+                    "Average (<=50%)",
+                    "Above average (50%-80%)",
+                    "Exceptional (> 80%)",
+                ],
+            ),
+            color=alt.condition(
+                click,
+                alt.value("#252324"),
+                alt.Color(
+                    "mask_usage_range:N",
+                    scale=alt.Scale(
+                        domain=[
+                            "Average (<=50%)",
+                            "Above average (50%-80%)",
+                            "Exceptional (> 80%)",
+                        ],
+                        range=["#C5DDF9", "#3CA0EE", "#0015BC"],
+                    ),
+                    legend=None,
+                ),
+            ),
+        )
+        .add_selection(click)
+        .properties(width=40)
+    )
+
+    legend_republican = (
+        alt.Chart(
+            source[source["segmentname"] == "Republican"],
+            title="Counties that voted Republican in 2020",
+        )
+        .mark_point(size=100, filled=True)
+        .encode(
+            y=alt.Y(
+                "mask_usage_range:N",
+                axis=alt.Axis(orient="right"),
+                title=None,
+                sort=[
+                    "Average (<=50%)",
+                    "Above average (50%-80%)",
+                    "Exceptional (> 80%)",
+                ],
+            ),
+            color=alt.condition(
+                click,
+                alt.value("#252324"),
+                alt.Color(
+                    "mask_usage_range:N",
+                    scale=alt.Scale(
+                        domain=[
+                            "Average (<=50%)",
+                            "Above average (50%-80%)",
+                            "Exceptional (> 80%)",
+                        ],
+                        range=["#F2A595", "#EE8778", "#FE0000"],
+                    ),
+                    legend=None,
+                ),
+            ),
+        )
+        .add_selection(click)
+        .properties(width=40)
+    )
+
+    return county_mask_chart, legend_republican, legend_democrat
+
+
 #########################################################################################
 #########################################################################################
 #########################################################################################
