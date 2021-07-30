@@ -684,11 +684,13 @@ def createPercentPointChangeAvgDeathsChart():
         alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(strokeDash=[2, 5]).encode(x="x")
     )
     mark_more_deaths_line2 = (
-        alt.Chart(pd.DataFrame({"y": [2]})).mark_rule(strokeDash=[2, 5]).encode(y="y")
+        alt.Chart(pd.DataFrame({"y": [1.25]}))
+        .mark_rule(strokeDash=[2, 5])
+        .encode(y="y")
     )
 
     annotations = [
-        [8, 2.3, "Counties above this line\nhad the highest COVID-19 death rates"]
+        [8, 1.8, "Counties above this line\nhad the highest COVID-19 death rates"]
     ]
     a_df = pd.DataFrame(annotations, columns=["x", "y", "note"])
 
@@ -1562,10 +1564,21 @@ def createDailyInteractiveVaccinationChart():
     big_chart = (
         alt.Chart(
             full_source,
-            title=[
-                "Percentage of state’s population age 18 and older that has received",
-                "at least one dose of a COVID-19 vaccine as of June 26th, 2021",
-            ],
+            # title=[
+            #     "Percentage of state’s population age 18 and older that has received",
+            #     "at least one dose of a COVID-19 vaccine as of June 26th, 2021",
+            # ],
+            title={
+                "text": [
+                    "Percentage of state’s population age 18 and older that has received",
+                    "at least one dose of a COVID-19 vaccine as of June 26th, 2021",
+                ],
+                "subtitle": ["Size of bubble scaled by state's population",],
+                "color": "black",
+                "subtitleColor": "grey",
+                "fontSize": 14,
+                "fontWeight": "bold",
+            },
         )
         .mark_point(filled=True, opacity=1,)
         .transform_filter(slider_selection)
@@ -1956,7 +1969,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         us_case_rolling_df, [state_vaccine_df.date.min(), state_vaccine_df.date.max()]
     )
     us_timeseries = us_base.mark_line(
-        strokeDash=[2, 6], strokeWidth=3, color="black"
+        strokeDash=[3, 6], strokeWidth=3, color="black"
     ).encode(tooltip=[alt.Tooltip("geoid:N", title="US Country Average Cases:")])
 
     # Create a "mean" cases timeseries chart of two segments - Stayed Democrat and Stayed Republican
@@ -1980,7 +1993,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     )
 
     stayed_democrat_timeseries = stayed_democrat_base.mark_line(
-        strokeDash=[6, 2], strokeWidth=4, color="blue"
+        strokeDash=[2, 6], strokeWidth=3, color="blue"
     ).encode(
         tooltip=[
             alt.Tooltip(
@@ -1998,7 +2011,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     )
 
     stayed_republican_timeseries = stayed_republican_base.mark_line(
-        strokeDash=[6, 2], strokeWidth=4, color="red"
+        strokeDash=[2, 4], strokeWidth=3, color="red"
     ).encode(
         tooltip=[
             alt.Tooltip(
@@ -2446,10 +2459,10 @@ def createFreqCountyMaskUsageWithRanges(type):
 
     # create an average chart
     average_mask_chart = (
-        alt.Chart(source, title=f"Average {type.capitalize()} mask usage")
+        alt.Chart(source, title=f"Avg. {type.capitalize()} usage")
         .mark_bar()
         .encode(
-            y=alt.Y("mask_usage_range:N", title=None),
+            y=alt.Y("mask_usage_range:N", title=None, axis=alt.Axis(orient="right")),
             x=alt.X("mean(mask_usage):Q", title=None),
             color=alt.Color(
                 "segmentname:N",
