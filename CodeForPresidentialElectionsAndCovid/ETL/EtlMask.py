@@ -37,6 +37,7 @@ def getCountyPopulationMask():
     )
     return county_pop_mask_df
 
+
 ##########################################################################################
 def createFrequentAndInfrequentMaskUsers():
     # Add up groupings of frequent and non frequent
@@ -93,3 +94,44 @@ def createFrequentAndInfrequentMaskUsers():
         changes_df, how="inner", on="COUNTYFP"
     )
     return county_pop_mask_melt_df
+
+
+##########################################################################################
+def createDataForFreqAndInFreqMaskUse():
+    """[This function creates three dataframes]
+
+    Returns:
+        [Pandas dataframes]: [A consolidated dataframe, frequent mask usage dataframe and infrequent mask usage dataframe]
+    """
+    county_pop_mask_df = createFrequentAndInfrequentMaskUsers()
+    county_pop_mask_df["segmentname"] = county_pop_mask_df["changecolor"].map(
+        color_segment_dict
+    )
+    county_pop_mask_df.segmentname = county_pop_mask_df.segmentname.str.replace(
+        "Stayed ", ""
+    )
+    county_pop_mask_df.segmentname = county_pop_mask_df.segmentname.str.replace(
+        "To ", ""
+    )
+
+    county_pop_mask_df = county_pop_mask_df[
+        ["STATE", "COUNTYFP", "CTYNAME", "mask_usage_type", "mask_usage", "segmentname"]
+    ].copy()
+    county_pop_mask_df["mask_usage_range"] = county_pop_mask_df["mask_usage"].apply(
+        lambda x: getMaskUsageRange(x)
+    )
+
+    county_pop_mask_df["range_color"] = county_pop_mask_df[
+        ["segmentname", "mask_usage_range"]
+    ].apply(
+        lambda x: getColorRangeMaskUsage(x["segmentname"], x["mask_usage_range"]),
+        axis=1,
+    )
+
+    county_pop_mask_freq_df = county_pop_mask_df[
+        county_pop_mask_df["mask_usage_type"] == "FREQUENT"
+        ].copy()
+    county_pop_mask_infreq_df = county_pop_mask_df[
+        county_pop_mask_df["mask_usage_type"] == "NOT FREQUENT"
+        ].copy()
+    return county_pop_mask_df, county_pop_mask_freq_df, county_pop_mask_infreq_df
