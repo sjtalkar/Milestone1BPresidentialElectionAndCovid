@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 
 from .EtlElection import *
+from .EtlCovid import *
 
 def getCountyPopulationMask():
     # Read the persidential election CSV from local disk
