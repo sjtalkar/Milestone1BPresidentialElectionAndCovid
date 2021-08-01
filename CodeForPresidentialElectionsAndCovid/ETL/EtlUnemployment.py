@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from pathlib import Path
-from datetime import date
+from datetime import datetime, date
 from .EtlElection import *
 from .EtlCovid import *
 
@@ -14,22 +14,11 @@ def getUnemploymentRate(level="county"):
         THIS FUNCTION reads the county level unemployment rate from the 2020 dataset published by the BLS
         and 
         
-        Functions called: None
+        Functions called: 
         
-        Input: None
-        Returns: Dataframe election_winners_df with the following set of columns.
-                 Note: Granularity = COUNTYFP.
-        
-            state                  (full name)
-            state_po               (2-letter abbreviation)
-            CTYNAME                (full name)
-            COUNTYFP               (FIPS number) Questions
-            party_winner_2020
-            totalvotes_2020
-            fractionalvotes_2020
-            party_winner_2016
-            totalvotes_2016
-            fractionalvotes_2016
+        Input: 
+            level (str): "county" or "state". Indicate the level at which the data should be aggregated.
+        Returns: Dataframe unemployment_covid_df
                 
     """
     
@@ -101,3 +90,43 @@ def getUnemploymentRate(level="county"):
     # uncemployment_covid_df.join(covid_df, on="COUNTYFP", how="left")
     
     return unemployment_covid_df
+
+def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
+    if unemployment_covid_df is None:
+        unemployment_covid_df = getUnemploymentRate("county")
+    county_mask_df = pd.read_csv( r"../DataForPresidentialElectionsAndCovid/Dataset 7 Covid/mask-use-by-county.csv")
+    july_2020 = datetime.fromisoformat("2020-07-01")
+    
+    # Mask Data are from July 2020
+    # So keep only the unemployment and covid data until July 2020 and aggregate
+    unemployment_covid_july_df = unemployment_covid_df[unemployment_covid_df["month"] <= july_2020]
+    unemployment_covid_july_df.drop(columns=["month"])
+    unemployment_covid_july_df = unemployment_covid_july_df.groupby(["COUNTYFP"]).agg({
+            "unemployment_rate": lambda x : x.mean(),
+            "cases_avg_per_100k": lambda x : x.sum(),
+            "deaths_avg_per_100k": lambda x : x.sum(),
+            "CTYNAME": "first",
+            "state": "first",
+            "party": "first"
+        })
+    unemployment_covid_july_df.reset_index(inplace=True)
+    
+    # Merge the Mask dataset
+    county_mask_df = pd.read_csv( r"../DataForPresidentialElectionsAndCovid/Dataset 7 Covid/mask-use-by-county.csv")
+    unemployment_covid_july_df = pd.merge(unemployment_covid_july_df, county_mask_df, how="left", on="COUNTYFP")
+    
+    # If we look at "state" level, aggregate by state
+    if level == "state":
+        unemployment_covid_july_df = unemployment_covid_july_df.groupby(["state"]).agg({
+                "unemployment_rate": lambda x : x.mean(),
+                "cases_avg_per_100k": lambda x : x.sum(),
+                "deaths_avg_per_100k": lambda x : x.sum(),
+                "party": "first",
+                "NEVER": lambda x : x.mean(),
+                "RARELY": lambda x : x.mean(),
+                "SOMETIMES": lambda x : x.mean(),
+                "FREQUENTLY": lambda x : x.mean(),
+                "ALWAYS": lambda x : x.mean()
+            })
+        unemployment_covid_july_df.reset_index(inplace=True)
+    return unemployment_covid_july_df
