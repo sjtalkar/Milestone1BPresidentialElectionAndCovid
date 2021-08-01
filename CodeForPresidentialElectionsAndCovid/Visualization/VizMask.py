@@ -275,44 +275,6 @@ def createCombinedElectoralAndMaskUsageCharts():
 ############################################################################################################
 ######################Mask Data Charts with interactive legend
 ############################################################################################################
-def getMaskUsageRange(mask_usage):
-    """This function creates ranges for percentage mask usage
-       The three ranges created are "Below average (<=50%)", "Average (50%-80%)" and "Exceptional (> 80%)"
-
-    Args:
-        mask_usage ([float]): [Estimated mask usage value]
-
-    Returns:
-        [string]: [Range of usage]
-    """
-    if mask_usage <= 0.5:
-        return "Below average (<=50%)"
-    elif mask_usage > 0.5 and mask_usage <= 0.8:
-        return "Average (50%-80%)"
-    else:
-        return "Exceptional (> 80%)"
-
-
-def getColorRangeMaskUsage(segmentname, mask_usage_range):
-    """[This function comverts a combination of political affiliation and mask usage range into a color]
-
-    Args:
-        segmentname ([String]): [Democrat/Republican]
-        mask_usage_range ([type]): [Ranges of mask uasge percentage]
-
-    Returns:
-        [string]: [Hex Code of color]
-    """
-    legend_dict = {
-        ("Democrat", "Below average (<=50%)"): "#C5DDF9",
-        ("Democrat", "Average (50%-80%)"): "#3CA0EE",
-        ("Democrat", "Exceptional (> 80%)"): "#0015BC",
-        ("Republican", "Below average (<=50%)"): "#F2A595",
-        ("Republican", "Average (50%-80%)"): "#EE8778",
-        ("Republican", "Exceptional (> 80%)"): "#FE0000",
-    }
-    return legend_dict[(segmentname, mask_usage_range)]
-
 def createFreqCountyMaskUsageWithRanges(_type):
     """[This function accepts the type of Mask usage - Frequent or Infrequent and creates a
         Geo chart with colors based o nrange of frequent mask usage]
