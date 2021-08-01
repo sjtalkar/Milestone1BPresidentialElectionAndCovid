@@ -48,7 +48,6 @@ color_segment_dict = {
 
 DataFolder = Path("../DataForPresidentialElectionsAndCovid/")
 
-
 US_STATE_ABBRV = {
     "Alabama": "AL",
     "Alaska": "AK",
@@ -108,6 +107,7 @@ US_STATE_ABBRV = {
     "Wyoming": "WY",
 }
 
+
 ########################################################################################
 def getRollingCaseAverageSegmentLevel():
     """
@@ -118,13 +118,13 @@ def getRollingCaseAverageSegmentLevel():
                       4- Groups by date and color (see getElectionSegmentsData() for color definitions).
                       5- Aggregates to get mean number of cases per 100k at the segment level.
                       6- Adds a column for the name of the color segment.
-            
+
         Functions called: getCasesRollingAveragePer100K(), getElectionSegmentsData()
         Called by: Main code
-        
+
         Input arguments: None
         Returns: Dataframe 'case_rolling_df' with columns:
-        
+
                  date
                  changecolor            (change in political affiliation, if any)
                  cases_avg_per_100k
@@ -139,7 +139,7 @@ def getRollingCaseAverageSegmentLevel():
     ### Plot all data
     case_rolling_df = case_rolling_df[
         case_rolling_df["date"] < pd.to_datetime("2021-01-01")
-    ].copy()
+        ].copy()
 
     # Get election results data
     election_winners_df = getElectionSegmentsData()
@@ -150,8 +150,8 @@ def getRollingCaseAverageSegmentLevel():
     )
     case_rolling_df = (
         case_rolling_df.groupby(["date", "changecolor"])
-        .agg(cases_avg_per_100k=("cases_avg_per_100k", "mean"))
-        .reset_index()
+            .agg(cases_avg_per_100k=("cases_avg_per_100k", "mean"))
+            .reset_index()
     )
     case_rolling_df["segmentname"] = case_rolling_df["changecolor"].map(
         color_segment_dict
@@ -161,20 +161,20 @@ def getRollingCaseAverageSegmentLevel():
 
 ########################################################################################
 def getCasesRollingAveragePer100K():
-    """ 
+    """
         THIS FUNCTION reads in the county cases/deaths rolling averages and
         loads it into a dataframe, keeping the columns listed below.
-    
+
         Functions called: None
         Called by: getRollingCaseAverageSegmentLevel()
-        
+
         Input arguments: None
         Returns: Dataframe 'case_rolling_df' with rolling average of cases
                  Columns: date
                           cases_avg_per_100k
-                          deaths_avg_per_100k 
+                          deaths_avg_per_100k
                           COUNTYFP (i.e. FIPS number) Questions
-        
+
     """
 
     ## The below is the rolling average, as it is updated we will get the latest data
@@ -209,20 +209,20 @@ def getElectionSegmentsData(segment_color_dict=segment_color_dict):
         THIS FUNCTION obtains the dataframe election_winners_df from the function getElectionData(),
         adds a color column, then uses the color to indicate whether or not the county was won by a
         different party between the 2016 and 2020 elections.
-    
+
         Functions called: getElectionData()
         Called by: getRollingCaseAverageSegmentLevel()
 
         Input: Dictionary segment_color_dict from above, which defines segment colors.
         Returns: Dataframe election_winners_df from getElectionData() with one extra column:
-        
+
                  changecolor: This column shows Segments = TO_OTHER
                                                            TO_DEMOCRAT
                                                            TO_REPUBLICAN
                                                            STAYED_DEMOCRAT
                                                            STAYED_REPUBLICAN
                                                            STAYED_OTHER
-        
+
     """
 
     election_winners_df = getElectionData()
@@ -266,14 +266,14 @@ def getElectionData():
         THIS FUNCTION reads in county-level presidential election vote data from 2000 to 2020,
         selects the last two elections (2016 and 2020), and returns a dataframe with the result
         totals and fractions for DEMOCRAT and REPUBLICAN, and groups all others under OTHER.
-        
+
         Functions called: None
         Called by: getElectionSegmentsData()
-        
+
         Input: None
         Returns: Dataframe election_winners_df with the following set of columns.
                  Note: Granularity = COUNTYFP.
-        
+
             state                  (full name)
             state_po               (2-letter abbreviation)
             CTYNAME                (full name)
@@ -284,7 +284,7 @@ def getElectionData():
             party_winner_2016
             totalvotes_2016
             fractionalvotes_2016
-                
+
     """
 
     # Read in presidential election data by county, then select only after 2016 (i.e. 2016 and 2020).
@@ -319,12 +319,12 @@ def getElectionData():
         election_df.groupby(
             ["year", "state", "state_po", "CTYNAME", "COUNTYFP", "party", "totalvotes"]
         )
-        .agg(candidatevotes=("candidatevotes", sum))
-        .reset_index()
+            .agg(candidatevotes=("candidatevotes", sum))
+            .reset_index()
     )
 
     election_df["fractionalvotes"] = (
-        election_df["candidatevotes"] / election_df["totalvotes"]
+            election_df["candidatevotes"] / election_df["totalvotes"]
     )
 
     # get the party that won in each county, total and fractional votes
@@ -335,7 +335,7 @@ def getElectionData():
     election_2016_winners_df = election_df[
         (election_df["fractionalvotes"] == election_df["maxfractionalvotes"])
         & (election_df["year"] == 2016)
-    ].copy()
+        ].copy()
     election_2016_winners_df.rename(
         columns={
             "totalvotes": "totalvotes_2016",
@@ -350,7 +350,7 @@ def getElectionData():
     election_2020_winners_df = election_df[
         (election_df["fractionalvotes"] == election_df["maxfractionalvotes"])
         & (election_df["year"] == 2020)
-    ].copy()
+        ].copy()
     election_2020_winners_df.rename(
         columns={
             "totalvotes": "totalvotes_2020",
@@ -383,18 +383,18 @@ def getElectionData():
 def createChart(case_rolling_df):
     """
       THIS FUNCTION uses the 'base' encoding chart created by getBaseChart() to create a line chart.
-      
+
       The highlight_segment variable uses the mark_line function to create a line chart out of the encoding. The
       color of the line is set using the conditional color set for the categorical variable using the selection.
       The chart is bound to the selection using add_selection.
-      
+
       It also creates a selector element of a vertical array of circles so the user can select between segment.
-      
+
       Functions called: getSelection(), getBaseChart()
       Called by: Main code
-        
+
       Input: Dataframe with rolling average of cases created by getRollingCaseAverageSegmentLevel()
-      Returns: base, make_selector, highlight_segment, radio_select      
+      Returns: base, make_selector, highlight_segment, radio_select
 
     """
 
@@ -402,23 +402,23 @@ def createChart(case_rolling_df):
 
     make_selector = (
         alt.Chart(case_rolling_df)
-        .mark_rect()
-        .encode(
+            .mark_rect()
+            .encode(
             y=alt.Y(
                 "segmentname:N",
                 axis=alt.Axis(title="Pick affiliation", titleFontSize=15),
             ),
             color=change_color_condition,
         )
-        .add_selection(radio_select)
+            .add_selection(radio_select)
     )
 
     base = getBaseChart(case_rolling_df, ["2020-01-01", "2020-12-31"])
 
     highlight_segment = (
         base.mark_line(strokeWidth=2)
-        .add_selection(radio_select)
-        .encode(
+            .add_selection(radio_select)
+            .encode(
             color=change_color_condition,
             strokeDash=alt.condition(
                 (alt.datum.segmentname == "To Democrat")
@@ -437,9 +437,9 @@ def getSelection():
     """
       THIS FUNCTION creates a selection element and uses it to 'conditionally' set a color
       for a categorical variable (segment).
-      
+
       It return both the single selection as well as the Category for Color choice set based on selection.
-      
+
       Functions called: None
       Called by: createChart()
 
@@ -466,14 +466,14 @@ def getBaseChart(case_rolling_df, date_range):
     """
       THIS FUNCTION creates a chart by encoding the date along the X positional axis and rolling mean
       along the Y positional axis. The mark (bar/line..) can be decided upon by the calling function.
-      
+
       Functions called: None
       Called by: createChart()
 
       Input: Dataframe passed by calling function. The date column is expected to be 'date'
              date_range : a list containing min and max date to be considered for the time series eg["2020-01-01", "2020-12-31"]
       Returns: Base chart
-      
+
     """
 
     # Set the date range for which the timeseries has to be graphed
@@ -482,11 +482,11 @@ def getBaseChart(case_rolling_df, date_range):
     source = case_rolling_df[
         (case_rolling_df["date"] >= date_range[0])
         & (case_rolling_df["date"] <= date_range[1])
-    ].copy()
+        ].copy()
 
     base = (
         alt.Chart(source)
-        .encode(
+            .encode(
             x=alt.X(
                 "date:T",
                 timeUnit="yearmonthdate",
@@ -503,7 +503,7 @@ def getBaseChart(case_rolling_df, date_range):
                 axis=alt.Axis(title="Cases (rolling mean per 100K)"),
             ),
         )
-        .properties(width=600, height=400)
+            .properties(width=600, height=400)
     )
     return base
 
@@ -513,7 +513,7 @@ def createTooltip(base, radio_select, case_rolling_df):
     """
       THIS FUNCTION uses the 'base' encoding chart and the selection captured to create four elements
       related to selection.
-      
+
       Functions called: None
       Called by: Main code
 
@@ -530,16 +530,16 @@ def createTooltip(base, radio_select, case_rolling_df):
     # the x-value of the cursor
     selectors = (
         alt.Chart(case_rolling_df)
-        .mark_point()
-        .encode(x="date:T", opacity=alt.value(0),)
-        .add_selection(nearest)
+            .mark_point()
+            .encode(x="date:T", opacity=alt.value(0), )
+            .add_selection(nearest)
     )
 
     # Draw points on the line, and highlight based on selection
     points = (
         base.mark_point(size=5, dy=-10)
-        .encode(opacity=alt.condition(nearest, alt.value(1), alt.value(0)))
-        .transform_filter(radio_select)
+            .encode(opacity=alt.condition(nearest, alt.value(1), alt.value(0)))
+            .transform_filter(radio_select)
     )
 
     # Draw text labels near the points, and highlight based on selection
@@ -552,20 +552,20 @@ def createTooltip(base, radio_select, case_rolling_df):
             # fontWeight="bold",
             lineBreak="\n",
         )
-        .encode(
+            .encode(
             text=alt.condition(
                 nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
             ),
         )
-        .transform_filter(radio_select)
+            .transform_filter(radio_select)
     )
 
     # Draw a rule at the location of the selection
     rules = (
         alt.Chart(case_rolling_df)
-        .mark_rule(color="darkgrey", strokeWidth=2, strokeDash=[5, 4])
-        .encode(x="date:T",)
-        .transform_filter(nearest)
+            .mark_rule(color="darkgrey", strokeWidth=2, strokeDash=[5, 4])
+            .encode(x="date:T", )
+            .transform_filter(nearest)
     )
     return selectors, rules, points, tooltip_text
 
@@ -603,9 +603,9 @@ def getPercentilePointChageDeathsData():
     #                                  & (cases_rolling_df['date']<=pd.to_datetime('2020-12-31'))]
     cases_rolling_df = (
         cases_rolling_df.groupby("COUNTYFP")["deaths_avg_per_100k"]
-        .mean()
-        .fillna(0)
-        .reset_index()
+            .mean()
+            .fillna(0)
+            .reset_index()
     )
 
     # Select the top 100 in COVID deaths
@@ -623,7 +623,7 @@ def getPercentilePointChageDeathsData():
     )
     merged_df = merged_df[merged_df["_merge"] == "both"].copy()
     merged_df["pct_increase"] = (
-        merged_df["fractionalvotes_2020"] - merged_df["fractionalvotes_2016"]
+            merged_df["fractionalvotes_2020"] - merged_df["fractionalvotes_2016"]
     )
     merged_df["pct_increase"] = merged_df["pct_increase"] * 100
 
@@ -632,10 +632,9 @@ def getPercentilePointChageDeathsData():
 
 
 def createPercentPointChangeAvgDeathsChart():
-
     """
       THIS FUNCTION showing average COVID deaths versus percent change for each political affiliation.
-      
+
       Functions called: None
       Called by: Main code
 
@@ -657,8 +656,8 @@ def createPercentPointChangeAvgDeathsChart():
             merged_df,
             title="Covid deaths in 2020 versus Percentage point difference in votes",
         )
-        .mark_circle()
-        .encode(
+            .mark_circle()
+            .encode(
             x=alt.X("pct_increase:Q", title="Percent point change"),
             y=alt.Y("deaths_avg_per_100k:Q", title="Average deaths per 100K"),
             # color=alt.Color("changecolor:N", scale=None),
@@ -676,8 +675,8 @@ def createPercentPointChangeAvgDeathsChart():
                 ),
             ],
         )
-        .properties(height=300, width=800)
-        .add_selection(selection)
+            .properties(height=300, width=800)
+            .add_selection(selection)
     )
 
     mark_more_deaths_line1 = (
@@ -685,8 +684,8 @@ def createPercentPointChangeAvgDeathsChart():
     )
     mark_more_deaths_line2 = (
         alt.Chart(pd.DataFrame({"y": [1.25]}))
-        .mark_rule(strokeDash=[2, 5])
-        .encode(y="y")
+            .mark_rule(strokeDash=[2, 5])
+            .encode(y="y")
     )
 
     annotations = [
@@ -696,31 +695,30 @@ def createPercentPointChangeAvgDeathsChart():
 
     more_deaths_text = (
         alt.Chart(a_df)
-        .mark_text(align="left", baseline="middle", fontSize=10, dx=7)
-        .encode(x="x:Q", y="y:Q", text=alt.Text("note:N"))
+            .mark_text(align="left", baseline="middle", fontSize=10, dx=7)
+            .encode(x="x:Q", y="y:Q", text=alt.Text("note:N"))
     )
 
     return (
-        perc_point_deaths_chart
-        + mark_more_deaths_line1
-        + mark_more_deaths_line2
-        + more_deaths_text
+            perc_point_deaths_chart
+            + mark_more_deaths_line1
+            + mark_more_deaths_line2
+            + more_deaths_text
     )
 
 
 ########################################################################################
 def createStateVaccinationData():
-
     """
       THIS FUNCTION obtains vaccination data by state (Questions: by June 26, 2021), merges into it
       state population data, followed by 2020 presidential election data.
-      
+
       Functions called: getStateLevelElectionData2020()
       Called by: createStateVaccinationChart()
 
       Input: None
       Returns: Dataframe vaccination_df with the following columns:
-      
+
                STATEFP  ...........................................  (state FIPS)
                STNAME
                People with at least One Dose by State of Residence
@@ -751,10 +749,10 @@ def createStateVaccinationData():
 
     # Calculate Total population assumed by data as per percent and numbers
     vaccination_df["Total population"] = (
-        (vaccination_df["People with at least One Dose by State of Residence"] * 100)
-        / vaccination_df[
-            "Percent of Total Pop with at least One Dose by State of Residence"
-        ]
+            (vaccination_df["People with at least One Dose by State of Residence"] * 100)
+            / vaccination_df[
+                "Percent of Total Pop with at least One Dose by State of Residence"
+            ]
     )
 
     # Read the county population CSV from local file
@@ -799,7 +797,7 @@ def createStateVaccinationData():
 
     # for charting purposes
     vaccination_df["Percent with one dose"] = (
-        vaccination_df["Percent with one dose"] / 100
+            vaccination_df["Percent with one dose"] / 100
     )
 
     return vaccination_df
@@ -807,10 +805,9 @@ def createStateVaccinationData():
 
 ########################################################################################
 def createStateVaccinationChart():
-
     """
       THIS FUNCTION creates a chart relating vaccination data to 2020 presidential election winning party.
-      
+
       Functions called: createStateVaccinationData()
       Called by: Main code
 
@@ -822,8 +819,8 @@ def createStateVaccinationChart():
     max_value = source["Total population"].max()
     min_value = source["Total population"].min()
     source["y_center"] = (
-        (source["Total population"] - min_value) / (max_value - min_value)
-    ) + 0.5
+                                 (source["Total population"] - min_value) / (max_value - min_value)
+                         ) + 0.5
 
     big_chart = (
         alt.Chart(
@@ -833,8 +830,8 @@ def createStateVaccinationChart():
                 "at least one dose of a COVID-19 vaccine as of June 26th",
             ],
         )
-        .mark_point(filled=True, opacity=1,)
-        .encode(
+            .mark_point(filled=True, opacity=1, )
+            .encode(
             x=alt.X(
                 "Percent with one dose:Q",
                 axis=alt.Axis(
@@ -857,18 +854,18 @@ def createStateVaccinationChart():
                 "Total population:Q", scale=alt.Scale(range=[100, 3000]), legend=None
             ),
         )
-        .properties(width=700, height=400)
+            .properties(width=700, height=400)
     )
 
     big_chart_line = (
         alt.Chart(pd.DataFrame({"x": [0.5]}))
-        .mark_rule(strokeDash=[10, 10])
-        .encode(x="x")
+            .mark_rule(strokeDash=[10, 10])
+            .encode(x="x")
     )
 
     big_chart_text = (
         alt.Chart(source)
-        .mark_text(
+            .mark_text(
             align="left",
             baseline="middle",
             dx=-3,
@@ -876,15 +873,15 @@ def createStateVaccinationChart():
             fontWeight="bold",
             color="white",
         )
-        .encode(
+            .encode(
             x=alt.X("Percent with one dose:Q"), y=alt.Y("y_center:Q"), text="state_po"
         )
     )
 
     small_chart = (
         alt.Chart(source, title="Percentage of people vaccinated wih one dose")
-        .mark_point(filled=True, opacity=1)
-        .encode(
+            .mark_point(filled=True, opacity=1)
+            .encode(
             x=alt.X(
                 "Percent with one dose:Q",
                 axis=alt.Axis(
@@ -905,7 +902,7 @@ def createStateVaccinationChart():
                 "Total population:Q", scale=alt.Scale(range=[50, 100]), legend=None
             ),
         )
-        .properties(width=400, height=50)
+            .properties(width=400, height=50)
     )
 
     # Add a rectangle around the data
@@ -913,17 +910,17 @@ def createStateVaccinationChart():
 
     rect = (
         alt.Chart(box)
-        .mark_rect(fill="white", stroke="black", opacity=0.3)
-        .encode(alt.X("x1",), alt.Y("y1",), x2="x2", y2="y2")
+            .mark_rect(fill="white", stroke="black", opacity=0.3)
+            .encode(alt.X("x1", ), alt.Y("y1", ), x2="x2", y2="y2")
     )
 
     full_x_chart = small_chart + rect
 
     final_chart = (
         ((big_chart + big_chart_text + big_chart_line) & full_x_chart)
-        .resolve_scale(x="independent", y="independent", size="independent")
-        .configure_title(fontSize=15)
-        .configure_axis(labelColor="#a9a9a9")
+            .resolve_scale(x="independent", y="independent", size="independent")
+            .configure_title(fontSize=15)
+            .configure_axis(labelColor="#a9a9a9")
     )
 
     return final_chart
@@ -933,13 +930,13 @@ def createStateVaccinationChart():
 def getStateLevelElectionData2020():
     """
         THIS FUNCTION gets the winning party of the 2020 presidential election by state.
-        
+
         Functions called: None
         Called by: createStateVaccinationData()
-        
+
         Input: None
         Returns: Dataframe with the following columns:
-        
+
                  year
                  state
                  state_po                (2-letter abbreviation)
@@ -970,7 +967,7 @@ def getStateLevelElectionData2020():
     )
 
     state_election_df["fractionalvotes"] = (
-        state_election_df["candidatevotes"] / state_election_df["totalvotes"]
+            state_election_df["candidatevotes"] / state_election_df["totalvotes"]
     )
 
     # get the party that won in each county
@@ -979,8 +976,8 @@ def getStateLevelElectionData2020():
     )["fractionalvotes"].transform(max)
     state_election_df = state_election_df[
         (
-            state_election_df["fractionalvotes"]
-            == state_election_df["maxfractionalvotes"]
+                state_election_df["fractionalvotes"]
+                == state_election_df["maxfractionalvotes"]
         )
     ].copy()
     state_election_df.drop(columns=["maxfractionalvotes", "year"], inplace=True)
@@ -992,10 +989,10 @@ def getDailyVaccinationPercentData():
     """
         This function retrieves the daily percentage of vaccinated people in each state
         The day_num column is the count of days from the date of first vaccination administered in any state,
-        which will be used in the slider providing interactivity. 
-        
+        which will be used in the slider providing interactivity.
+
         Input: None
-        Output: 'Date', 
+        Output: 'Date',
                 'Location'
                 'Percent with one dose'
                  'state'
@@ -1009,7 +1006,7 @@ def getDailyVaccinationPercentData():
                  'party_simplified'
                  'fractionalvotes'
                  'day_num'
-      
+
     """
     vaccination_df = pd.read_csv(
         r"../DataForPresidentialElectionsAndCovid/Dataset 7 Covid/COVID-19_Vaccinations_in_the_United_States_Jurisdiction.csv"
@@ -1058,7 +1055,7 @@ def getDailyVaccinationPercentData():
 
     # for charting purposes
     vaccination_df["Percent with one dose"] = (
-        vaccination_df["Percent with one dose"] / 100
+            vaccination_df["Percent with one dose"] / 100
     )
 
     # vaccination_df[vaccination_df['Date'].dt.year == 2020]['Percent with one dose'].unique()
@@ -1075,7 +1072,6 @@ def getDailyVaccinationPercentData():
 ########################################################################################
 alt.data_transformers.disable_max_rows()
 
-
 ## Color global variables
 TO_OTHER = "#556B2F"
 TO_DEMOCRAT = "#11A3D6"
@@ -1090,7 +1086,6 @@ election_winners_df = getElectionSegmentsData()
 counties = alt.topo_feature(data.us_10m.url, "counties")
 us_states = alt.topo_feature(data.us_10m.url, "states")
 
-
 # Read the persidential election CSV from local disk
 population_df = pd.read_csv(
     r"../DataForPresidentialElectionsAndCovid/Dataset 3 Population Estimate through 2020/County Data Till 2020 co-est2020-alldata.csv",
@@ -1100,7 +1095,6 @@ state_pop_df = population_df[population_df["SUMLEV"] != 50].copy()
 state_pop_df = state_pop_df[
     ["STATE", "STNAME", "POPESTIMATE2016", "POPESTIMATE2020", "RNETMIG2020"]
 ]
-
 
 county_pop_df = population_df[population_df["SUMLEV"] == 50].copy()
 county_pop_df["COUNTYFP"] = county_pop_df["STATE"].astype("str").str.pad(
@@ -1125,6 +1119,7 @@ county_mask_df = pd.read_csv(
 county_pop_mask_df = pd.merge(
     county_pop_df, county_mask_df, how="right", on=["COUNTYFP"], indicator=True
 )
+
 
 ##########################################################################################
 def createFrequentAndInfrequentMaskUsers():
@@ -1167,8 +1162,8 @@ def createFrequentAndInfrequentMaskUsers():
                 "mask_usage_type",
             ]
         )["mask_usage"]
-        .sum()
-        .reset_index()
+            .sum()
+            .reset_index()
     )
 
     changes_df = election_winners_df[
@@ -1197,30 +1192,30 @@ createWhiteTheme()
 
 
 def createSankeyForAffilitionChange():
-    """ 
-        This function creates a Sankey chart that shows the County affiliation change from 
+    """
+        This function creates a Sankey chart that shows the County affiliation change from
         2016 to 2019
         The interactive tooltip will offer the actual numbers
     """
     sankey_df = (
         election_winners_df.groupby(["party_winner_2016", "party_winner_2020"])
-        .agg(countiesingroup=("totalvotes_2016", "count"))
-        .reset_index()
+            .agg(countiesingroup=("totalvotes_2016", "count"))
+            .reset_index()
     )
 
     sankey_df["party_winner_2016"] = sankey_df["party_winner_2016"] + "_2016"
     sankey_df["party_winner_2020"] = sankey_df["party_winner_2020"] + "_2020"
 
     label_list = (
-        sankey_df["party_winner_2016"].unique().tolist()
-        + sankey_df["party_winner_2020"].unique().tolist()
+            sankey_df["party_winner_2016"].unique().tolist()
+            + sankey_df["party_winner_2020"].unique().tolist()
     )
     label_idx_dict = {}
     for idx, label in enumerate(label_list):
         label_idx_dict[label] = idx
 
     label_list = [
-        f"Voted {label.split( '_')[0].capitalize()} in {label.split( '_')[1]}"
+        f"Voted {label.split('_')[0].capitalize()} in {label.split('_')[1]}"
         for label in label_list
     ]
 
@@ -1251,7 +1246,7 @@ def createSankeyForAffilitionChange():
                     value=values,
                     color=color_link,
                     hovertemplate="Link from  %{source.customdata}<br />"
-                    + "to %{target.customdata}<br />has  %{value} counties<extra></extra>",
+                                  + "to %{target.customdata}<br />has  %{value} counties<extra></extra>",
                 ),
             )
         ]
@@ -1271,20 +1266,19 @@ from vega_datasets import data
 
 
 def plotCountyMaskUsage(df, mask_usage_type, color_scheme):
-
     source = df[df["mask_usage_type"] == mask_usage_type]
 
     chart = (
         alt.Chart(counties)
-        .mark_geoshape()
-        .encode(
+            .mark_geoshape()
+            .encode(
             color=alt.Color("mask_usage:Q", scale=alt.Scale(scheme=color_scheme)),
             tooltip=[
                 alt.Tooltip("CTYNAME:N", title="County name: "),
                 alt.Tooltip("mask_usage:Q", title="Never use mask: "),
             ],
         )
-        .transform_lookup(
+            .transform_lookup(
             lookup="id",
             from_=alt.LookupData(
                 source,
@@ -1292,8 +1286,8 @@ def plotCountyMaskUsage(df, mask_usage_type, color_scheme):
                 ["mask_usage", "mask_usage_types", "COUNTYFP", "CTYNAME"],
             ),
         )
-        .project(type="albersUsa")
-        .properties(width=400, height=300)
+            .project(type="albersUsa")
+            .properties(width=400, height=300)
     )
     return chart
 
@@ -1308,7 +1302,7 @@ def plotAllMaskUsageTypesForCounties():
             "POPESTIMATE2020",
             "RNETMIG2020",
         ],
-        value_vars=["NEVER", "RARELY", "SOMETIMES", "FREQUENTLY", "ALWAYS",],
+        value_vars=["NEVER", "RARELY", "SOMETIMES", "FREQUENTLY", "ALWAYS", ],
         var_name="mask_usage_type",
         value_name="mask_usage",
         col_level=None,
@@ -1330,10 +1324,10 @@ def plotAllMaskUsageTypesForCounties():
 def createCombinedElectoralAndMaskUsageCharts():
     source = election_winners_df
     source["COUNTYANDFP"] = (
-        election_winners_df["CTYNAME"].str.capitalize()
-        + " ("
-        + election_winners_df["COUNTYFP"].astype(str)
-        + ")"
+            election_winners_df["CTYNAME"].str.capitalize()
+            + " ("
+            + election_winners_df["COUNTYFP"].astype(str)
+            + ")"
     )
     source["segmentname"] = election_winners_df["changecolor"].map(color_segment_dict)
 
@@ -1352,8 +1346,8 @@ def createCombinedElectoralAndMaskUsageCharts():
         alt.Chart(
             counties, title="Counties that changed affiliations in 2020 elections"
         )
-        .mark_geoshape()
-        .encode(
+            .mark_geoshape()
+            .encode(
             color=alt.Color("changecolor:N", scale=None),
             tooltip=[
                 alt.Tooltip("state:N", title="State: "),
@@ -1368,7 +1362,7 @@ def createCombinedElectoralAndMaskUsageCharts():
             # opacity=alt.condition(click, alt.value(0.8), alt.value(0.2)),
             opacity=alt.condition(segment_selection, alt.value(0.8), alt.value(0.2)),
         )
-        .transform_lookup(
+            .transform_lookup(
             lookup="id",
             from_=alt.LookupData(
                 source,
@@ -1386,27 +1380,27 @@ def createCombinedElectoralAndMaskUsageCharts():
                 ],
             ),
         )
-        .add_selection(
+            .add_selection(
             segment_selection  ## Make sure you have added the selection here
         )
-        .add_selection(click)  ## Make sure you have added the selection here
-        .project(type="albersUsa")
-        .properties(width=950, height=500)
+            .add_selection(click)  ## Make sure you have added the selection here
+            .project(type="albersUsa")
+            .properties(width=950, height=500)
     )
 
     outline = (
         alt.Chart(us_states)
-        .mark_geoshape(stroke="grey", fillOpacity=0)
-        .project(type="albersUsa")
-        .properties(width=950, height=500)
+            .mark_geoshape(stroke="grey", fillOpacity=0)
+            .project(type="albersUsa")
+            .properties(width=950, height=500)
     )
     #############################################
     county_pop_mask_melt_df = createFrequentAndInfrequentMaskUsers()
     county_pop_mask_melt_df["COUNTYANDFP"] = (
-        county_pop_mask_melt_df["CTYNAME"].str.replace(" County", "")
-        + " ("
-        + county_pop_mask_melt_df["COUNTYFP"].astype(str)
-        + ")"
+            county_pop_mask_melt_df["CTYNAME"].str.replace(" County", "")
+            + " ("
+            + county_pop_mask_melt_df["COUNTYFP"].astype(str)
+            + ")"
     )
     county_pop_mask_melt_df["segmentname"] = county_pop_mask_melt_df["changecolor"].map(
         color_segment_dict
@@ -1430,10 +1424,10 @@ def createCombinedElectoralAndMaskUsageCharts():
     )
     county_order_republican = county_pop_mask_republican[
         county_pop_mask_republican["mask_usage_type"] == "FREQUENT"
-    ]["COUNTYFP"].unique()
+        ]["COUNTYFP"].unique()
     county_order_democrat = county_pop_mask_democrat[
         county_pop_mask_democrat["mask_usage_type"] == "FREQUENT"
-    ]["COUNTYFP"].unique()
+        ]["COUNTYFP"].unique()
 
     county_pop_mask_stayed_republican = county_pop_mask_melt_df[
         county_pop_mask_melt_df["changecolor"].isin([STAYED_REPUBLICAN])
@@ -1449,15 +1443,15 @@ def createCombinedElectoralAndMaskUsageCharts():
     )
     county_order_stayed_republican = county_pop_mask_stayed_republican[
         county_pop_mask_stayed_republican["mask_usage_type"] == "FREQUENT"
-    ]["COUNTYFP"].unique()
+        ]["COUNTYFP"].unique()
     county_order_stayed_democrat = county_pop_mask_stayed_democrat[
         county_pop_mask_stayed_democrat["mask_usage_type"] == "FREQUENT"
-    ]["COUNTYFP"].unique()
+        ]["COUNTYFP"].unique()
 
     a = (
         alt.Chart(county_pop_mask_republican)
-        .mark_bar()
-        .encode(
+            .mark_bar()
+            .encode(
             x=alt.X("COUNTYANDFP:N", title="", sort=county_order_republican),
             y=alt.Y("mask_usage:Q", title=""),
             color=alt.Color(
@@ -1470,17 +1464,17 @@ def createCombinedElectoralAndMaskUsageCharts():
             ),
             opacity=alt.condition(segment_selection, alt.value(0.8), alt.value(0.2)),
         )
-        .add_selection(
+            .add_selection(
             segment_selection  ## Make sure you have added the selection here
         )
-        .add_selection(click)  ## Make sure you have added the selection here
-        .properties(height=100, width=200)
+            .add_selection(click)  ## Make sure you have added the selection here
+            .properties(height=100, width=200)
     )
 
     a1 = (
         alt.Chart(county_pop_mask_stayed_republican)
-        .mark_bar()
-        .encode(
+            .mark_bar()
+            .encode(
             x=alt.X("COUNTYANDFP:N", title="", sort=county_order_stayed_republican),
             y=alt.Y("mask_usage:Q", title=""),
             color=alt.Color(
@@ -1493,16 +1487,16 @@ def createCombinedElectoralAndMaskUsageCharts():
             ),
             opacity=alt.condition(segment_selection, alt.value(0.8), alt.value(0.2)),
         )
-        .add_selection(
+            .add_selection(
             segment_selection  ## Make sure you have added the selection here
         )
-        .properties(height=100, width=200)
+            .properties(height=100, width=200)
     )
 
     b = (
         alt.Chart(county_pop_mask_democrat)
-        .mark_bar()
-        .encode(
+            .mark_bar()
+            .encode(
             alt.X("COUNTYANDFP:N", title="", sort=county_order_democrat),
             alt.Y("mask_usage:Q", title=""),
             alt.Color(
@@ -1515,29 +1509,29 @@ def createCombinedElectoralAndMaskUsageCharts():
             ),
             opacity=alt.condition(segment_selection, alt.value(0.8), alt.value(0.2)),
         )
-        .add_selection(
+            .add_selection(
             segment_selection  ## Make sure you have added the selection here
         )
-        .properties(height=100, width=700)
+            .properties(height=100, width=700)
     )
 
     return (
-        (county_winners_chart + outline)
-        & alt.vconcat(a, b).resolve_scale(color="independent")
+            (county_winners_chart + outline)
+            & alt.vconcat(a, b).resolve_scale(color="independent")
     ).configure_concat(spacing=10)
 
 
 #######################################################################################
 def createDailyInteractiveVaccinationChart():
     """
-        THIS FUNCTION creates an interactive chart. A slider is provided that starts from the first day any resident 
+        THIS FUNCTION creates an interactive chart. A slider is provided that starts from the first day any resident
         received vaccination and can be moved up until June 28, 2021.
-        The chart shows the percentage of 18 years and above population of a state that as received at least 
-        one vaccine shot. Since some of the vaccines such as J&J require only one shot, this percentage shows the receptivity 
+        The chart shows the percentage of 18 years and above population of a state that as received at least
+        one vaccine shot. Since some of the vaccines such as J&J require only one shot, this percentage shows the receptivity
         of the population to a vaccine shot.
-            
+
         The size of the state bubble is proportional to the population of the state.
-    
+
     """
 
     full_source = getDailyVaccinationPercentData()
@@ -1545,8 +1539,8 @@ def createDailyInteractiveVaccinationChart():
     max_value = full_source["Total population"].max()
     min_value = full_source["Total population"].min()
     full_source["y_center"] = (
-        (full_source["Total population"] - min_value) / (max_value - min_value)
-    ) + 0.5
+                                      (full_source["Total population"] - min_value) / (max_value - min_value)
+                              ) + 0.5
 
     # Create Slider
     min_day_num = full_source.day_num.min()
@@ -1573,16 +1567,16 @@ def createDailyInteractiveVaccinationChart():
                     "Percentage of state’s population age 18 and older that has received",
                     "at least one dose of a COVID-19 vaccine as of June 26th, 2021",
                 ],
-                "subtitle": ["Size of bubble scaled by state's population",],
+                "subtitle": ["Size of bubble scaled by state's population", ],
                 "color": "black",
                 "subtitleColor": "grey",
                 "fontSize": 14,
                 "fontWeight": "bold",
             },
         )
-        .mark_point(filled=True, opacity=1,)
-        .transform_filter(slider_selection)
-        .encode(
+            .mark_point(filled=True, opacity=1, )
+            .transform_filter(slider_selection)
+            .encode(
             x=alt.X(
                 "Percent with one dose:Q",
                 axis=alt.Axis(
@@ -1606,19 +1600,19 @@ def createDailyInteractiveVaccinationChart():
                 "Total population:Q", scale=alt.Scale(range=[150, 3000]), legend=None
             ),
         )
-        .add_selection(slider_selection)
-        .properties(width=700, height=400)
+            .add_selection(slider_selection)
+            .properties(width=700, height=400)
     )
 
     big_chart_line = (
         alt.Chart(pd.DataFrame({"x": [0.5]}))
-        .mark_rule(strokeDash=[10, 10])
-        .encode(x="x")
+            .mark_rule(strokeDash=[10, 10])
+            .encode(x="x")
     )
 
     big_chart_text = (
         alt.Chart(full_source)
-        .mark_text(
+            .mark_text(
             align="left",
             baseline="middle",
             dx=-3,
@@ -1626,17 +1620,17 @@ def createDailyInteractiveVaccinationChart():
             fontWeight="bold",
             color="white",
         )
-        .transform_filter(slider_selection)
-        .encode(
+            .transform_filter(slider_selection)
+            .encode(
             x=alt.X("Percent with one dose:Q"), y=alt.Y("y_center:Q"), text="state_po"
         )
     )
 
     small_chart = (
         alt.Chart(full_source, title="Percentage of people vaccinated wih one dose")
-        .mark_point(filled=True, opacity=1)
-        .transform_filter(slider_selection)
-        .encode(
+            .mark_point(filled=True, opacity=1)
+            .transform_filter(slider_selection)
+            .encode(
             x=alt.X(
                 "Percent with one dose:Q",
                 axis=alt.Axis(
@@ -1657,8 +1651,8 @@ def createDailyInteractiveVaccinationChart():
                 "Total population:Q", scale=alt.Scale(range=[50, 100]), legend=None
             ),
         )
-        .add_selection(slider_selection)
-        .properties(width=400, height=50)
+            .add_selection(slider_selection)
+            .properties(width=400, height=50)
     )
 
     # Add a rectangle around the data
@@ -1666,16 +1660,16 @@ def createDailyInteractiveVaccinationChart():
 
     rect = (
         alt.Chart(box)
-        .mark_rect(fill="white", stroke="black", opacity=0.3)
-        .encode(alt.X("x1",), alt.Y("y1",), x2="x2", y2="y2")
+            .mark_rect(fill="white", stroke="black", opacity=0.3)
+            .encode(alt.X("x1", ), alt.Y("y1", ), x2="x2", y2="y2")
     )
 
     full_x_chart = small_chart + rect
 
     final_chart = (
         ((big_chart + big_chart_text + big_chart_line))
-        .configure_title(fontSize=15)
-        .configure_axis(labelColor="#a9a9a9")
+            .configure_title(fontSize=15)
+            .configure_axis(labelColor="#a9a9a9")
     )
 
     return final_chart
@@ -1687,7 +1681,6 @@ def createDailyInteractiveVaccinationChart():
 
 from ETLForElectionAndVaccinationData import *
 
-
 import pandas as pd
 import os
 import pickle
@@ -1696,20 +1689,19 @@ import altair as alt
 
 
 def getStateVaccinationDataWithAPI():
-
-    """ 
+    """
         THIS FUNCTION uses API calls to get the latest vaccination data at the state level
         It also gets the latest covid cases and deaths at the state levels from the NYT site that is regularly updated
         Functions called: None
         Called by: charting procedure
-        
+
         Input arguments: None
-        Returns: Three Dataframe 
-                    state_vaccine_df, 
-                    us_case_rolling_df with rolling average of cases at country = US  level 
+        Returns: Three Dataframe
+                    state_vaccine_df,
+                    us_case_rolling_df with rolling average of cases at country = US  level
                     state_case_rolling_df with rolling average of cases at state level
-                 Columns: 
-        
+                 Columns:
+
     """
 
     ##########################################################################################################
@@ -1784,7 +1776,7 @@ def getStateVaccinationDataWithAPI():
     ].max()
     state_vaccine_df = state_vaccine_df[
         state_vaccine_df["date"] >= min_vaccine_date
-    ].copy()
+        ].copy()
     state_vaccine_df["day_num"] = (state_vaccine_df["date"] - min_vaccine_date).dt.days
 
     state_vaccine_df["vacc_rank"] = state_vaccine_df.groupby("date")[
@@ -1823,11 +1815,11 @@ def getStateVaccinationDataWithAPI():
     state_case_rolling_df = state_case_rolling_df[
         (state_case_rolling_df.date >= min_vaccine_date)
         & (state_case_rolling_df.date <= max_date)
-    ]
+        ]
     us_case_rolling_df = us_case_rolling_df[
         (us_case_rolling_df.date >= min_vaccine_date)
         & (us_case_rolling_df.date <= max_date)
-    ]
+        ]
 
     return state_vaccine_df, us_case_rolling_df, state_case_rolling_df
 
@@ -1837,10 +1829,9 @@ def getStateVaccinationDataWithAPI():
 
 #########################################################################################
 def plotStateVaccinePct(df, date_in):
-
     """
-        This function generates a US state choropleth map with color scale tuned 
-        by the number of vaccinations at the latest time. 
+        This function generates a US state choropleth map with color scale tuned
+        by the number of vaccinations at the latest time.
 
         Input: Dataframe with State fips STATEFP, Percent with one dose and STNAME
         Output: The choropleth and the click select for each state
@@ -1876,8 +1867,8 @@ def plotStateVaccinePct(df, date_in):
                 "fontWeight": "bold",
             },
         )
-        .mark_geoshape(stroke="lightgrey")
-        .encode(
+            .mark_geoshape(stroke="lightgrey")
+            .encode(
             color=alt.condition(
                 click,
                 alt.value("lightgray"),
@@ -1893,15 +1884,15 @@ def plotStateVaccinePct(df, date_in):
                 ),
             ],
         )
-        .transform_lookup(
+            .transform_lookup(
             lookup="id",
             from_=alt.LookupData(
                 source, "STATEFP", ["Percent with one dose", "STATEFP", "STNAME"]
             ),
         )
-        .add_selection(click)  ## Make sure you have added the selection here
-        .project(type="albersUsa")
-        .properties(width=850, height=500)
+            .add_selection(click)  ## Make sure you have added the selection here
+            .project(type="albersUsa")
+            .properties(width=850, height=500)
     )
 
     return chart, click
@@ -1912,15 +1903,15 @@ def plotStateVaccinePct(df, date_in):
 
 def createCombinedVaccinationAndDeltaVariantTrend():
     """
-                This functions creates a Delta variant timeseries. 
-                A dropdown selector is created to select  a state but the timeseries can also display the 
-                state selected in a choropleth map displayed above it since the click selector of the choropleth map 
+                This functions creates a Delta variant timeseries.
+                A dropdown selector is created to select  a state but the timeseries can also display the
+                state selected in a choropleth map displayed above it since the click selector of the choropleth map
                 is added to the timeseries chart.
 
-                Tootltips are created to display the number of cases all through the timeseries       
+                Tootltips are created to display the number of cases all through the timeseries
 
                 Input: None
-                Output: 
+                Output:
                 vaccine_chart - The choropleth of US geography colored by vaccination population pct.
                 us_timeseries - Timeseries of average US covid cases after emergence of Delta variant
                 state_cases_delta_chart - Timeseries of State covid cases after emergence of Delta variant
@@ -1929,7 +1920,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
                 tooltip_text1 (Tooltip for state 1)
                 tooltip_text2 (Tooltip for state 2)
                 tooltip_text3 (Tooltip for US timeline)
-                points (Points to display the tootip text)  
+                points (Points to display the tootip text)
         """
 
     # Retrieve the data
@@ -1977,18 +1968,18 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         state_case_rolling_df.groupby(
             ["date", "party_simplified", "party_simplified_color"]
         )
-        .agg(
+            .agg(
             cases_avg_per_100k=("cases_avg_per_100k", "mean"),
             deaths_avg_per_100k=("deaths_avg_per_100k", "mean"),
         )
-        .reset_index()
+            .reset_index()
     )
 
     # Democrat Mean
     stayed_democrat_base = getBaseChart(
         party_cases_timeseries_df[
             party_cases_timeseries_df["party_simplified"] == "STAYED_DEMOCRAT"
-        ],
+            ],
         [state_vaccine_df.date.min(), state_vaccine_df.date.max()],
     )
 
@@ -2006,7 +1997,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     stayed_republican_base = getBaseChart(
         party_cases_timeseries_df[
             party_cases_timeseries_df["party_simplified"] == "STAYED_REPUBLICAN"
-        ],
+            ],
         [state_vaccine_df.date.min(), state_vaccine_df.date.max()],
     )
 
@@ -2044,7 +2035,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     # Create the line chart base to plot tooltip points
     just_line_state_cases_delta = (
         line_base.mark_line()
-        .encode(
+            .encode(
             x=alt.X("date:T"),
             y=alt.Y("cases_avg_per_100k:Q"),
             detail="party_simplified",
@@ -2062,13 +2053,13 @@ def createCombinedVaccinationAndDeltaVariantTrend():
                 dropdown_selection | click, alt.value(1), alt.value(0.2)
             ),
         )
-        .properties(height=300, width=800)
+            .properties(height=300, width=800)
     )
 
     ## This is the plot of the timeseries with selections added
     state_cases_delta_chart = (
         line_base.mark_line()
-        .encode(
+            .encode(
             x=alt.X("date:T"),
             y=alt.Y("cases_avg_per_100k:Q"),
             detail="party_simplified",
@@ -2090,9 +2081,9 @@ def createCombinedVaccinationAndDeltaVariantTrend():
                 alt.Tooltip("cases_avg_per_100k:Q", title="Cases per 100K:"),
             ],
         )
-        .properties(height=300, width=800)
-        .add_selection(dropdown_selection)
-        .add_selection(click)
+            .properties(height=300, width=800)
+            .add_selection(dropdown_selection)
+            .add_selection(click)
     )
 
     ####################################################################################################
@@ -2110,9 +2101,9 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     # the x-value of the cursor
     state_selectors = (
         alt.Chart(state_case_rolling_df)
-        .mark_point()
-        .encode(x="date:T", opacity=alt.value(0),)
-        .add_selection(nearest)
+            .mark_point()
+            .encode(x="date:T", opacity=alt.value(0), )
+            .add_selection(nearest)
     )
 
     # Draw points on the line, and highlight based on selection
@@ -2131,12 +2122,12 @@ def createCombinedVaccinationAndDeltaVariantTrend():
             # fontWeight="bold",
             lineBreak="\n",
         )
-        .encode(
+            .encode(
             text=alt.condition(
                 nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
             ),
         )
-        .transform_filter(dropdown_selection)
+            .transform_filter(dropdown_selection)
     )
 
     # Draw text labels near the points, and highlight based on selection
@@ -2149,12 +2140,12 @@ def createCombinedVaccinationAndDeltaVariantTrend():
             # fontWeight="bold",
             lineBreak="\n",
         )
-        .encode(
+            .encode(
             text=alt.condition(
                 nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
             ),
         )
-        .transform_filter(click)
+            .transform_filter(click)
     )
 
     # US Time series Draw text labels near the points, and highlight based on selection
@@ -2201,9 +2192,9 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     # Draw a rule at the location of the selection
     rules = (
         alt.Chart(state_case_rolling_df)
-        .mark_rule(color="darkgrey", strokeWidth=2, strokeDash=[5, 4])
-        .encode(x="date:T",)
-        .transform_filter(nearest)
+            .mark_rule(color="darkgrey", strokeWidth=2, strokeDash=[5, 4])
+            .encode(x="date:T", )
+            .transform_filter(nearest)
     )
 
     return (
@@ -2298,10 +2289,10 @@ def createDataForFreqAndInFreqMaskUse():
 
     county_pop_mask_freq_df = county_pop_mask_df[
         county_pop_mask_df["mask_usage_type"] == "FREQUENT"
-    ].copy()
+        ].copy()
     county_pop_mask_infreq_df = county_pop_mask_df[
         county_pop_mask_df["mask_usage_type"] == "NOT FREQUENT"
-    ].copy()
+        ].copy()
     return county_pop_mask_df, county_pop_mask_freq_df, county_pop_mask_infreq_df
 
 
@@ -2351,8 +2342,8 @@ def createFreqCountyMaskUsageWithRanges(type):
                 ],
             },
         )
-        .mark_geoshape(stroke="#706545", strokeWidth=0.1)
-        .encode(
+            .mark_geoshape(stroke="#706545", strokeWidth=0.1)
+            .encode(
             color=alt.condition(
                 click, alt.value("#b38449"), alt.Color("range_color:N", scale=None),
             ),
@@ -2363,7 +2354,7 @@ def createFreqCountyMaskUsageWithRanges(type):
                 alt.Tooltip("mask_usage:Q", title="Mask Usage Percent: ", format=".0%"),
             ],
         )
-        .transform_lookup(
+            .transform_lookup(
             lookup="id",
             from_=alt.LookupData(
                 source,
@@ -2378,16 +2369,16 @@ def createFreqCountyMaskUsageWithRanges(type):
                 ],
             ),
         )
-        .add_selection(click)
-        .project(type="albersUsa")
-        .properties(width=750, height=500)
+            .add_selection(click)
+            .project(type="albersUsa")
+            .properties(width=750, height=500)
     )
 
     # Create interactive model name legend
     legend_democrat = (
-        alt.Chart(source[source["segmentname"] == "Democrat"], title="Democrat(2020)",)
-        .mark_point(size=100, filled=True)
-        .encode(
+        alt.Chart(source[source["segmentname"] == "Democrat"], title="Democrat(2020)", )
+            .mark_point(size=100, filled=True)
+            .encode(
             y=alt.Y(
                 "mask_usage_range:N",
                 axis=alt.Axis(orient="right"),
@@ -2415,8 +2406,8 @@ def createFreqCountyMaskUsageWithRanges(type):
                 ),
             ),
         )
-        .add_selection(click)
-        .properties(width=40)
+            .add_selection(click)
+            .properties(width=40)
     )
 
     legend_republican = (
@@ -2424,8 +2415,8 @@ def createFreqCountyMaskUsageWithRanges(type):
             source[source["segmentname"] == "Republican"],
             title="Select: Republican(2020)",
         )
-        .mark_point(size=100, filled=True)
-        .encode(
+            .mark_point(size=100, filled=True)
+            .encode(
             y=alt.Y(
                 "mask_usage_range:N",
                 axis=alt.Axis(orient="right"),
@@ -2453,15 +2444,15 @@ def createFreqCountyMaskUsageWithRanges(type):
                 ),
             ),
         )
-        .add_selection(click)
-        .properties(width=40)
+            .add_selection(click)
+            .properties(width=40)
     )
 
     # create an average chart
     average_mask_chart = (
         alt.Chart(source, title=f"Avg. {type.capitalize()} usage")
-        .mark_bar()
-        .encode(
+            .mark_bar()
+            .encode(
             y=alt.Y("mask_usage_range:N", title=None, axis=alt.Axis(orient="right")),
             x=alt.X("mean(mask_usage):Q", title=None),
             color=alt.Color(
@@ -2475,7 +2466,6 @@ def createFreqCountyMaskUsageWithRanges(type):
     ).properties(width=100)
 
     return county_mask_chart, legend_republican, legend_democrat, average_mask_chart
-
 
 #########################################################################################
 #########################################################################################
@@ -2629,4 +2619,3 @@ def createFreqCountyMaskUsageWithRanges(type):
 
 #     return  chart + outline
 # plotCountyVaccinePct(full_df, max_date)
-
