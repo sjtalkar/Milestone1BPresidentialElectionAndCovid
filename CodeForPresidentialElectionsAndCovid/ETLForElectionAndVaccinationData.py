@@ -365,13 +365,16 @@ def getElectionData():
 
     # Merge 2016 and 2020 dataframes on state and county
     election_winners_df = election_2020_winners_df.merge(
-        election_2016_winners_df,
-        how="left",
-        on=["COUNTYFP"],
+        election_2016_winners_df, how="left", on=["COUNTYFP"],
     )
-    
-    election_winners_df.drop(columns=["state_y", "state_po_y", "CTYNAME_y"], inplace=True)
-    election_winners_df.rename(columns={"state_x": "state", "state_po_x": "state_po", "CTYNAME_x": "CTYNAME"}, inplace=True)
+
+    election_winners_df.drop(
+        columns=["state_y", "state_po_y", "CTYNAME_y"], inplace=True
+    )
+    election_winners_df.rename(
+        columns={"state_x": "state", "state_po_x": "state_po", "CTYNAME_x": "CTYNAME"},
+        inplace=True,
+    )
 
     return election_winners_df
 
@@ -681,11 +684,13 @@ def createPercentPointChangeAvgDeathsChart():
         alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(strokeDash=[2, 5]).encode(x="x")
     )
     mark_more_deaths_line2 = (
-        alt.Chart(pd.DataFrame({"y": [2]})).mark_rule(strokeDash=[2, 5]).encode(y="y")
+        alt.Chart(pd.DataFrame({"y": [1.25]}))
+        .mark_rule(strokeDash=[2, 5])
+        .encode(y="y")
     )
 
     annotations = [
-        [8, 2.3, "Counties above this line\nhad the highest COVID-19 death rates"]
+        [8, 1.8, "Counties above this line\nhad the highest COVID-19 death rates"]
     ]
     a_df = pd.DataFrame(annotations, columns=["x", "y", "note"])
 
@@ -1559,10 +1564,21 @@ def createDailyInteractiveVaccinationChart():
     big_chart = (
         alt.Chart(
             full_source,
-            title=[
-                "Percentage of state’s population age 18 and older that has received",
-                "at least one dose of a COVID-19 vaccine as of June 26th, 2021",
-            ],
+            # title=[
+            #     "Percentage of state’s population age 18 and older that has received",
+            #     "at least one dose of a COVID-19 vaccine as of June 26th, 2021",
+            # ],
+            title={
+                "text": [
+                    "Percentage of state’s population age 18 and older that has received",
+                    "at least one dose of a COVID-19 vaccine as of June 26th, 2021",
+                ],
+                "subtitle": ["Size of bubble scaled by state's population",],
+                "color": "black",
+                "subtitleColor": "grey",
+                "fontSize": 14,
+                "fontWeight": "bold",
+            },
         )
         .mark_point(filled=True, opacity=1,)
         .transform_filter(slider_selection)
@@ -1844,8 +1860,23 @@ def plotStateVaccinePct(df, date_in):
     click = alt.selection_multi(fields=["STATEFP"], init=[{"STATEFP": 1}])
 
     chart = (
-        alt.Chart(us_states)
-        .mark_geoshape()
+        alt.Chart(
+            us_states,
+            title={
+                "text": [
+                    "Vaccination: Population percent with atleast one vaccine shot"
+                ],
+                "subtitle": [
+                    "Hover for tooltip with state and vaccination percent value",
+                    "Shift+Click for multiple state selections",
+                ],
+                "color": "black",
+                "subtitleColor": "lightgrey",
+                "fontSize": 14,
+                "fontWeight": "bold",
+            },
+        )
+        .mark_geoshape(stroke="lightgrey")
         .encode(
             color=alt.condition(
                 click,
@@ -1937,7 +1968,57 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     us_base = getBaseChart(
         us_case_rolling_df, [state_vaccine_df.date.min(), state_vaccine_df.date.max()]
     )
-    us_timeseries = us_base.mark_line(strokeDash=[6, 2], strokeWidth=3, color="black")
+    us_timeseries = us_base.mark_line(
+        strokeDash=[3, 6], strokeWidth=3, color="black"
+    ).encode(tooltip=[alt.Tooltip("geoid:N", title="US Country Average Cases:")])
+
+    # Create a "mean" cases timeseries chart of two segments - Stayed Democrat and Stayed Republican
+    party_cases_timeseries_df = (
+        state_case_rolling_df.groupby(
+            ["date", "party_simplified", "party_simplified_color"]
+        )
+        .agg(
+            cases_avg_per_100k=("cases_avg_per_100k", "mean"),
+            deaths_avg_per_100k=("deaths_avg_per_100k", "mean"),
+        )
+        .reset_index()
+    )
+
+    # Democrat Mean
+    stayed_democrat_base = getBaseChart(
+        party_cases_timeseries_df[
+            party_cases_timeseries_df["party_simplified"] == "STAYED_DEMOCRAT"
+        ],
+        [state_vaccine_df.date.min(), state_vaccine_df.date.max()],
+    )
+
+    stayed_democrat_timeseries = stayed_democrat_base.mark_line(
+        strokeDash=[2, 6], strokeWidth=3, color="blue"
+    ).encode(
+        tooltip=[
+            alt.Tooltip(
+                "cases_avg_per_100k:Q", title="Stayed Democrat State Average Cases:"
+            ),
+        ]
+    )
+
+    # Republican Mean
+    stayed_republican_base = getBaseChart(
+        party_cases_timeseries_df[
+            party_cases_timeseries_df["party_simplified"] == "STAYED_REPUBLICAN"
+        ],
+        [state_vaccine_df.date.min(), state_vaccine_df.date.max()],
+    )
+
+    stayed_republican_timeseries = stayed_republican_base.mark_line(
+        strokeDash=[2, 4], strokeWidth=3, color="red"
+    ).encode(
+        tooltip=[
+            alt.Tooltip(
+                "cases_avg_per_100k:Q", title="Stayed Republican State Average Cases:"
+            ),
+        ]
+    )
 
     # Create the dropdown selector for state names
     input_dropdown = alt.binding_select(
@@ -1946,7 +2027,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         name="State: ",
     )
     dropdown_selection = alt.selection_single(
-        fields=["state"], bind=input_dropdown, name="State: ", init={"state": "Alaska"}
+        fields=["state"], bind=input_dropdown, name="State: ", init={"state": "None"}
     )
 
     # Each timeline will be colored by state affiliation
@@ -2076,22 +2157,45 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         .transform_filter(click)
     )
 
-    # Draw text labels near the points, and highlight based on selection
-    tooltip_text3 = (
-        us_timeseries.mark_text(
-            align="left",
-            dx=-60,
-            dy=-15,
-            fontSize=15,
-            # fontWeight="bold",
-            lineBreak="\n",
-        )
-        .encode(
-            text=alt.condition(
-                nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
-            ),
-        )
-        .transform_filter(click)
+    # US Time series Draw text labels near the points, and highlight based on selection
+    tooltip_text3 = us_timeseries.mark_text(
+        align="left",
+        dx=-60,
+        dy=-15,
+        fontSize=15,
+        # fontWeight="bold",
+        lineBreak="\n",
+    ).encode(
+        text=alt.condition(
+            nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
+        ),
+    )
+
+    # Stayed Democrat Time series Draw text labels near the points, and highlight based on selection
+    tooltip_text4 = stayed_democrat_timeseries.mark_text(
+        align="left",
+        dx=-60,
+        dy=-15,
+        fontSize=15,
+        # fontWeight="bold",
+        lineBreak="\n",
+    ).encode(
+        text=alt.condition(
+            nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
+        ),
+    )
+
+    tooltip_text5 = stayed_republican_timeseries.mark_text(
+        align="left",
+        dx=-60,
+        dy=-15,
+        fontSize=15,
+        # fontWeight="bold",
+        lineBreak="\n",
+    ).encode(
+        text=alt.condition(
+            nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
+        ),
     )
 
     # Draw a rule at the location of the selection
@@ -2105,17 +2209,274 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     return (
         vaccine_chart,
         us_timeseries,
+        stayed_democrat_timeseries,
+        stayed_republican_timeseries,
         state_cases_delta_chart,
         state_selectors,
         rules,
         tooltip_text1,
         tooltip_text2,
         tooltip_text3,
+        tooltip_text4,
+        tooltip_text5,
         points,
     )
 
 
+############################################################################################################
+######################Mask Data Charts with interactive legend
+############################################################################################################
+def getMaskUsageRange(mask_usage):
+    """This function creates ranges for percentage mask usage
+       The three ranges created are "Below average (<=50%)", "Average (50%-80%)" and "Exceptional (> 80%)"
+
+    Args:
+        mask_usage ([float]): [Estimated mask usage value]
+
+    Returns:
+        [string]: [Range of usage]
+    """
+    if mask_usage <= 0.5:
+        return "Below average (<=50%)"
+    elif mask_usage > 0.5 and mask_usage <= 0.8:
+        return "Average (50%-80%)"
+    else:
+        return "Exceptional (> 80%)"
+
+
+def getColorRangeMaskUsage(segmentname, mask_usage_range):
+    """[This function comverts a combination of political affiliation and mask usage range into a color]
+
+    Args:
+        segmentname ([String]): [Democrat/Republican]
+        mask_usage_range ([type]): [Ranges of mask uasge percentage]
+
+    Returns:
+        [string]: [Hex Code of color]
+    """
+    legend_dict = {
+        ("Democrat", "Below average (<=50%)"): "#C5DDF9",
+        ("Democrat", "Average (50%-80%)"): "#3CA0EE",
+        ("Democrat", "Exceptional (> 80%)"): "#0015BC",
+        ("Republican", "Below average (<=50%)"): "#F2A595",
+        ("Republican", "Average (50%-80%)"): "#EE8778",
+        ("Republican", "Exceptional (> 80%)"): "#FE0000",
+    }
+    return legend_dict[(segmentname, mask_usage_range)]
+
+
+def createDataForFreqAndInFreqMaskUse():
+    """[This function creates three dataframes]
+
+    Returns:
+        [Pandas dataframes]: [A consolidated dataframe, frequent mask usage dataframe and infrequent mask usage dataframe]
+    """
+    county_pop_mask_df = createFrequentAndInfrequentMaskUsers()
+    county_pop_mask_df["segmentname"] = county_pop_mask_df["changecolor"].map(
+        color_segment_dict
+    )
+    county_pop_mask_df.segmentname = county_pop_mask_df.segmentname.str.replace(
+        "Stayed ", ""
+    )
+    county_pop_mask_df.segmentname = county_pop_mask_df.segmentname.str.replace(
+        "To ", ""
+    )
+
+    county_pop_mask_df = county_pop_mask_df[
+        ["STATE", "COUNTYFP", "CTYNAME", "mask_usage_type", "mask_usage", "segmentname"]
+    ].copy()
+    county_pop_mask_df["mask_usage_range"] = county_pop_mask_df["mask_usage"].apply(
+        lambda x: getMaskUsageRange(x)
+    )
+
+    county_pop_mask_df["range_color"] = county_pop_mask_df[
+        ["segmentname", "mask_usage_range"]
+    ].apply(
+        lambda x: getColorRangeMaskUsage(x["segmentname"], x["mask_usage_range"]),
+        axis=1,
+    )
+
+    county_pop_mask_freq_df = county_pop_mask_df[
+        county_pop_mask_df["mask_usage_type"] == "FREQUENT"
+    ].copy()
+    county_pop_mask_infreq_df = county_pop_mask_df[
+        county_pop_mask_df["mask_usage_type"] == "NOT FREQUENT"
+    ].copy()
+    return county_pop_mask_df, county_pop_mask_freq_df, county_pop_mask_infreq_df
+
+
 #########################################################################################
+
+
+def createFreqCountyMaskUsageWithRanges(type):
+    """[This function accepts the type of Mask usage - Frequent or Infrequent and creates a
+        Geo chart with colors based o nrange of frequent mask usage]
+
+    Args:
+        type ([string]): ["FREQUENT"/"NON FREQUENT"]
+
+    Returns:
+        [type]: [description]
+    """
+
+    counties = alt.topo_feature(data.us_10m.url, "counties")
+    # Setup interactivty
+    click = alt.selection_single(
+        fields=["range_color"], init={"range_color": "#FE0000"}
+    )
+
+    # Get data
+    (
+        county_pop_mask_df,
+        county_pop_mask_freq_df,
+        county_pop_mask_infreq_df,
+    ) = createDataForFreqAndInFreqMaskUse()
+
+    if type == "FREQUENT":
+        source = county_pop_mask_freq_df
+    else:
+        source = county_pop_mask_infreq_df
+
+    county_mask_chart = (
+        alt.Chart(
+            counties,
+            title={
+                "text": [
+                    f"{type.capitalize()} Mask Usage From Survey Response by County and Political Affiliation"
+                ],
+                "subtitle": [
+                    "Hover for tooltip with state and mask usage percent value",
+                    "Click on legend colors for selecting counties with given political affiliation",
+                    "and chosen range of mask usage",
+                ],
+            },
+        )
+        .mark_geoshape(stroke="#706545", strokeWidth=0.1)
+        .encode(
+            color=alt.condition(
+                click, alt.value("#b38449"), alt.Color("range_color:N", scale=None),
+            ),
+            tooltip=[
+                # alt.Tooltip('state:N', title='State: '),
+                alt.Tooltip("CTYNAME:N", title="County name: "),
+                alt.Tooltip("mask_usage_type:N", title="Mask Usage Type: "),
+                alt.Tooltip("mask_usage:Q", title="Mask Usage Percent: ", format=".0%"),
+            ],
+        )
+        .transform_lookup(
+            lookup="id",
+            from_=alt.LookupData(
+                source,
+                "COUNTYFP",
+                [
+                    "COUNTYFP",
+                    "CTYNAME",
+                    "mask_usage_type",
+                    "mask_usage",
+                    "mask_usage_range",
+                    "range_color",
+                ],
+            ),
+        )
+        .add_selection(click)
+        .project(type="albersUsa")
+        .properties(width=750, height=500)
+    )
+
+    # Create interactive model name legend
+    legend_democrat = (
+        alt.Chart(source[source["segmentname"] == "Democrat"], title="Democrat(2020)",)
+        .mark_point(size=100, filled=True)
+        .encode(
+            y=alt.Y(
+                "mask_usage_range:N",
+                axis=alt.Axis(orient="right"),
+                title=None,
+                sort=[
+                    "Below average (<=50%)",
+                    "Average (50%-80%)",
+                    "Exceptional (> 80%)",
+                ],
+            ),
+            color=alt.condition(
+                click,
+                alt.value("#b38449"),
+                alt.Color(
+                    "mask_usage_range:N",
+                    scale=alt.Scale(
+                        domain=[
+                            "Below average (<=50%)",
+                            "Average (50%-80%)",
+                            "Exceptional (> 80%)",
+                        ],
+                        range=["#C5DDF9", "#3CA0EE", "#0015BC"],
+                    ),
+                    legend=None,
+                ),
+            ),
+        )
+        .add_selection(click)
+        .properties(width=40)
+    )
+
+    legend_republican = (
+        alt.Chart(
+            source[source["segmentname"] == "Republican"],
+            title="Select: Republican(2020)",
+        )
+        .mark_point(size=100, filled=True)
+        .encode(
+            y=alt.Y(
+                "mask_usage_range:N",
+                axis=alt.Axis(orient="right"),
+                title=None,
+                sort=[
+                    "Below average (<=50%)",
+                    "Average (50%-80%)",
+                    "Exceptional (> 80%)",
+                ],
+            ),
+            color=alt.condition(
+                click,
+                alt.value("#b38449"),
+                alt.Color(
+                    "mask_usage_range:N",
+                    scale=alt.Scale(
+                        domain=[
+                            "Below average (<=50%)",
+                            "Average (50%-80%)",
+                            "Exceptional (> 80%)",
+                        ],
+                        range=["#F2A595", "#EE8778", "#FE0000"],
+                    ),
+                    legend=None,
+                ),
+            ),
+        )
+        .add_selection(click)
+        .properties(width=40)
+    )
+
+    # create an average chart
+    average_mask_chart = (
+        alt.Chart(source, title=f"Avg. {type.capitalize()} usage")
+        .mark_bar()
+        .encode(
+            y=alt.Y("mask_usage_range:N", title=None, axis=alt.Axis(orient="right")),
+            x=alt.X("mean(mask_usage):Q", title=None),
+            color=alt.Color(
+                "segmentname:N",
+                scale=alt.Scale(
+                    domain=["Republican", "Democrat"], range=["#FE0000", "#0015BC"]
+                ),
+                legend=alt.Legend(title="Voted(2020)"),
+            ),
+        )
+    ).properties(width=100)
+
+    return county_mask_chart, legend_republican, legend_democrat, average_mask_chart
+
+
 #########################################################################################
 #########################################################################################
 #########################################################################################
