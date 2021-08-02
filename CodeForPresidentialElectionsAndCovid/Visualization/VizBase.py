@@ -21,7 +21,7 @@ color_segment_dict = {
 }
 
 ########################################################################################
-def createChart(case_rolling_df):
+def createCovidConfirmedTimeseriesChart(case_rolling_df):
     """
       THIS FUNCTION uses the 'base' encoding chart created by getBaseChart() to create a line chart.
       
@@ -47,7 +47,9 @@ def createChart(case_rolling_df):
         .encode(
             y=alt.Y(
                 "segmentname:N",
-                axis=alt.Axis(title="Pick affiliation", titleFontSize=15),
+                axis=alt.Axis(
+                    title="Pick affiliation", titleFontSize=15, orient="right"
+                ),
             ),
             color=change_color_condition,
         )
@@ -68,7 +70,7 @@ def createChart(case_rolling_df):
                 alt.value([0]),  # solid line
             ),
         )
-    ).properties(title="Rolling Average Cases Per 100K")
+    )
 
     return base, make_selector, highlight_segment, radio_select
 
@@ -126,7 +128,18 @@ def getBaseChart(case_rolling_df, date_range):
     ].copy()
 
     base = (
-        alt.Chart(source)
+        alt.Chart(
+            source,
+            title={
+                "text": [
+                    "Year 2020 Timeseries of Confirmed Covid Cases Per 100K residents (7 day rolling average)"
+                ],
+                "subtitle": [
+                    "Click on legend colors to select segment(s) with given political affiliation",
+                    "Shift + Click for multiple selections",
+                ],
+            },
+        )
         .encode(
             x=alt.X(
                 "date:T",

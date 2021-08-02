@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import io
+import requests
 
 from .EtlElection import *
-
 
 
 color_segment_dict = {
@@ -17,8 +18,39 @@ color_segment_dict = {
 
 DataFolder = Path("../DataForPresidentialElectionsAndCovid/")
 
+########################################################################################
+def csv_to_dataframe(response):
+    """
+    Convert response of API call to dataframe
+    
+    """
+    return pd.read_csv(io.StringIO(response.text))
+
 
 ########################################################################################
+
+
+def getCDCConfirmedCasesWithAPIQuery():
+    """This function calls a Socrata API with a where clause for the time specified to get confirmed Covid cases
+        from CDC
+
+    Returns:
+        [Dataframe]: Dataframe with columns
+                    submission_date	state	
+                    conf_cases	prob_cases
+                    new_case	pnew_case
+                    tot_death	conf_death
+                    prob_death	new_death	pnew_death
+    """
+    # ### Read the pickle file with stored token
+    pickle_in = open("APIToken.pickle", "rb")
+    APITokenIn = pickle.load(pickle_in)
+    url = f"https://data.cdc.gov/resource/9mfq-cb36.csv?$$app_token={APITokenIn}&$where=submission_date between '2020-01-01T00:00:00' and '2021-01-01T00:00:00'"
+    response = requests.request("GET", url)
+    df = csv_to_dataframe(response)
+    return df
+
+
 def getRollingCaseAverageSegmentLevel():
     """
         THIS FUNCTION 1- Obtains COVID cases and deaths per 100k at the county level. Questions: From when?
@@ -45,8 +77,7 @@ def getRollingCaseAverageSegmentLevel():
     # Get rolling averages data
     case_rolling_df = getCasesRollingAveragePer100K()
 
-    # Questions: Limiting to data before start of 2021. Meaning of next comment??
-    ### Plot all data
+    ### Plot all data for year 2020
     case_rolling_df = case_rolling_df[
         case_rolling_df["date"] < pd.to_datetime("2021-01-01")
     ].copy()
@@ -89,7 +120,7 @@ def getCasesRollingAveragePer100K():
 
     ## The below is the rolling average, as it is updated we will get the latest data
 
-    # Questions: Are we going to update the data? Should we?
+    # This is the source of the data. This was then stored in a local drive for better speed.
     # case_rolling_df = pd.read_csv(r"https://raw.githubusercontent.com/nytimes/ \
     #                                    covid-19-data/master/rolling-averages/us-counties.csv")
     case_rolling_df = pd.read_csv(
@@ -97,10 +128,6 @@ def getCasesRollingAveragePer100K():
     )
     case_rolling_df["date"] = pd.to_datetime(case_rolling_df["date"])
     case_rolling_df.sort_values(by=["state", "county", "date"], inplace=True)
-
-    # Questions: Are we going to use this? Related to data updates?
-    # print(f"First date in dataset = {case_rolling_df['date'].min()}\n \
-    #                                    Last date in dataset = {case_rolling_df['date'].max()}")
 
     case_rolling_df = case_rolling_df[
         ["date", "geoid", "county", "cases_avg_per_100k", "deaths_avg_per_100k"]
@@ -111,8 +138,6 @@ def getCasesRollingAveragePer100K():
     case_rolling_df.drop(columns=["geoid", "county"], inplace=True)
 
     return case_rolling_df
-
-
 
 
 ########################################################################################
