@@ -14,7 +14,6 @@ alt.data_transformers.enable("json")
 alt.data_transformers.disable_max_rows()
 
 
-
 def createPercentPointChangeAvgDeathsChart():
 
     """
@@ -68,11 +67,13 @@ def createPercentPointChangeAvgDeathsChart():
         alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(strokeDash=[2, 5]).encode(x="x")
     )
     mark_more_deaths_line2 = (
-        alt.Chart(pd.DataFrame({"y": [2]})).mark_rule(strokeDash=[2, 5]).encode(y="y")
+        alt.Chart(pd.DataFrame({"y": [1.25]}))
+        .mark_rule(strokeDash=[2, 5])
+        .encode(y="y")
     )
 
     annotations = [
-        [8, 2.3, "Counties above this line\nhad the highest COVID-19 death rates"]
+        [8, 1.8, "Counties above this line\nhad the highest COVID-19 death rates"]
     ]
     a_df = pd.DataFrame(annotations, columns=["x", "y", "note"])
 
@@ -88,9 +89,6 @@ def createPercentPointChangeAvgDeathsChart():
         + mark_more_deaths_line2
         + more_deaths_text
     )
-
-
-
 
 
 def createSankeyForAffilitionChange():
@@ -162,5 +160,4 @@ def createSankeyForAffilitionChange():
     # Set the theme
     fig.layout.template = "custom_dark"
     return fig
-
 

@@ -3,7 +3,6 @@ import numpy as np
 from pathlib import Path
 
 
-
 # Color global variables
 TO_OTHER = "#556B2F"
 TO_DEMOCRAT = "#11A3D6"
@@ -110,7 +109,7 @@ def getElectionSegmentsData(segment_color_dict=segment_color_dict):
 
     # Set a variable of color that marks NO change and other categories
 
-    # Split the no change further into those that stayed democart and those that stayed republican
+    # Split the no change further into those that stayed democrat and those that stayed republican
     election_winners_df["changecolor"] = pd.Series(
         np.where(
             election_winners_df["party_winner_2020"]
@@ -246,17 +245,16 @@ def getElectionData():
 
     # Merge 2016 and 2020 dataframes on state and county
     election_winners_df = election_2020_winners_df.merge(
-        election_2016_winners_df,
-        how="left",
-        on=["COUNTYFP"],
+        election_2016_winners_df, how="left", on=["COUNTYFP"],
     )
-    
-    election_winners_df.drop(columns=["state_y", "state_po_y", "CTYNAME_y"], inplace=True)
-    election_winners_df.rename(columns={
-        "state_x": "state",
-        "state_po_x": "state_po",
-        "CTYNAME_x": "CTYNAME"},
-        inplace=True)
+
+    election_winners_df.drop(
+        columns=["state_y", "state_po_y", "CTYNAME_y"], inplace=True
+    )
+    election_winners_df.rename(
+        columns={"state_x": "state", "state_po_x": "state_po", "CTYNAME_x": "CTYNAME"},
+        inplace=True,
+    )
 
     return election_winners_df
 
