@@ -8,7 +8,7 @@ from .EtlCovid import *
 def getCountyPopulationMask():
     # Read the persidential election CSV from local disk
     population_df = pd.read_csv(
-        r"../DataForPresidentialElectionsAndCovid/Dataset 3 Population Estimate through 2020/County Data Till 2020 co-est2020-alldata.csv",
+        DataFolder / r"County Data Till 2020 co-est2020-alldata.csv",
         encoding="latin-1",
     )
 

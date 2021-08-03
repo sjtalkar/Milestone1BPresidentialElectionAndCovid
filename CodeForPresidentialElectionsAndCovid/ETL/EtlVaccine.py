@@ -36,7 +36,7 @@ def createStateVaccinationData():
                fractionalvotes
     """
     vaccination_df = pd.read_csv(
-        DataFolder / r"Dataset 7 Covid/covid19_vaccinations_in_the_united_states.csv",
+        DataFolder / r"covid19_vaccinations_in_the_united_states.csv",
         skiprows=2,
     )
 
@@ -61,7 +61,7 @@ def createStateVaccinationData():
     # Read the county population CSV from local file
     population_df = pd.read_csv(
         DataFolder
-        / r"Dataset 3 Population Estimate through 2020/County Data Till 2020 co-est2020-alldata.csv",
+        / r"County Data Till 2020 co-est2020-alldata.csv",
         encoding="latin-1",
     )
     state_pop_df = population_df[population_df["SUMLEV"] != 50].copy()
@@ -131,7 +131,7 @@ def getDailyVaccinationPercentData():
       
     """
     vaccination_df = pd.read_csv(
-        r"../DataForPresidentialElectionsAndCovid/Dataset 7 Covid/COVID-19_Vaccinations_in_the_United_States_Jurisdiction.csv"
+        DataFolder / r"COVID-19_Vaccinations_in_the_United_States_Jurisdiction.csv"
     )
     ## Percent of population with at lease one dose based on the jurisdiction where recipient lives
     vaccination_df = vaccination_df[
@@ -150,7 +150,7 @@ def getDailyVaccinationPercentData():
 
     # Read the persidential election CSV from local disk
     population_df = pd.read_csv(
-        r"../DataForPresidentialElectionsAndCovid/Dataset 3 Population Estimate through 2020/County Data Till 2020 co-est2020-alldata.csv",
+        DataFolder / r"County Data Till 2020 co-est2020-alldata.csv",
         encoding="latin-1",
     )
     state_pop_df = population_df[population_df["SUMLEV"] != 50].copy()
@@ -230,14 +230,13 @@ def getStateVaccinationDataWithAPI():
     ############### When developing comment above and uncomment out read from file below ###########################
     folder_name = os.listdir(
         DataFolder
-        / r"../DataForPresidentialElectionsAndCovid/Dataset 9 State Vaccine Data Using API/"
     )
-    path_name = r"../DataForPresidentialElectionsAndCovid/Dataset 9 State Vaccine Data Using API/"
+    path_name = DataFolder
 
     state_vaccine_df = pd.DataFrame()
     for name in folder_name:
         if name.startswith("StateVaccineDataFile"):
-            df = pd.read_csv(path_name + name)
+            df = pd.read_csv(path_name / name)
             df = df[
                 [
                     "date",
@@ -256,7 +255,7 @@ def getStateVaccinationDataWithAPI():
     # Read the county population CSV from local file
     population_df = pd.read_csv(
         DataFolder
-        / r"Dataset 3 Population Estimate through 2020/County Data Till 2020 co-est2020-alldata.csv",
+        / r"County Data Till 2020 co-est2020-alldata.csv",
         encoding="latin-1",
     )
     state_pop_df = population_df[population_df["SUMLEV"] != 50].copy()

@@ -124,7 +124,7 @@ def getCasesRollingAveragePer100K():
     # case_rolling_df = pd.read_csv(r"https://raw.githubusercontent.com/nytimes/ \
     #                                    covid-19-data/master/rolling-averages/us-counties.csv")
     case_rolling_df = pd.read_csv(
-        DataFolder / r"Dataset 7 Covid/june 26 _rolling_average_us-counties.csv"
+        DataFolder / r"june 26 _rolling_average_us-counties.csv"
     )
     case_rolling_df["date"] = pd.to_datetime(case_rolling_df["date"])
     case_rolling_df.sort_values(by=["state", "county", "date"], inplace=True)
@@ -226,7 +226,7 @@ def getDailyVaccinationPercentData():
       
     """
     vaccination_df = pd.read_csv(
-        r"../DataForPresidentialElectionsAndCovid/Dataset 7 Covid/COVID-19_Vaccinations_in_the_United_States_Jurisdiction.csv"
+        DataFolder / r"COVID-19_Vaccinations_in_the_United_States_Jurisdiction.csv"
     )
     ## Percent of population with at lease one dose based on the jurisdiction where recipient lives
     vaccination_df = vaccination_df[
@@ -245,7 +245,7 @@ def getDailyVaccinationPercentData():
 
     # Read the persidential election CSV from local disk
     population_df = pd.read_csv(
-        r"../DataForPresidentialElectionsAndCovid/Dataset 3 Population Estimate through 2020/County Data Till 2020 co-est2020-alldata.csv",
+        DataFolder / r"County Data Till 2020 co-est2020-alldata.csv",
         encoding="latin-1",
     )
     state_pop_df = population_df[population_df["SUMLEV"] != 50].copy()

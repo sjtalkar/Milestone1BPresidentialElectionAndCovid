@@ -282,7 +282,7 @@ def getStateLevelElectionData2020():
     # Join with state level election data to color the circles
     state_election_df = pd.read_csv(
         DataFolder
-        / r"Dataset 1 Population numbers from Dataverse/1976-2020-president.csv"
+        / r"1976-2020-president.csv"
     )
     state_election_df = state_election_df[state_election_df["year"] == 2020].copy()
     state_election_df.drop(

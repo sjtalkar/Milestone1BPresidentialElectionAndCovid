@@ -94,7 +94,7 @@ def getUnemploymentRate(level="county"):
 def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
     if unemployment_covid_df is None:
         unemployment_covid_df = getUnemploymentRate("county")
-    county_mask_df = pd.read_csv( r"../DataForPresidentialElectionsAndCovid/Dataset 7 Covid/mask-use-by-county.csv")
+    county_mask_df = pd.read_csv( DataFolder / r"mask-use-by-county.csv")
     july_2020 = datetime.fromisoformat("2020-07-01")
     
     # Mask Data are from July 2020
@@ -112,7 +112,7 @@ def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
     unemployment_covid_july_df.reset_index(inplace=True)
     
     # Merge the Mask dataset
-    county_mask_df = pd.read_csv( r"../DataForPresidentialElectionsAndCovid/Dataset 7 Covid/mask-use-by-county.csv")
+    county_mask_df = pd.read_csv( DataFolder / r"mask-use-by-county.csv")
     unemployment_covid_july_df = pd.merge(unemployment_covid_july_df, county_mask_df, how="left", on="COUNTYFP")
     
     # If we look at "state" level, aggregate by state
