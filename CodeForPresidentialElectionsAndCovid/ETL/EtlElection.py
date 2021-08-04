@@ -141,6 +141,10 @@ def getElectionSegmentsData(segment_color_dict=segment_color_dict):
 
 
 ########################################################################################
+def recount_total_votes(df, county_fips):
+    total_votes = df[df["totalvotes"].isnull()].groupby("COUNTYFP").sum().loc[county_fips,"candidatevotes"]
+    
+    
 def getElectionData():
     """
         THIS FUNCTION reads in county-level presidential election vote data from 2000 to 2020,
@@ -177,6 +181,11 @@ def getElectionData():
     election_df.loc[
         election_df["CTYNAME"] == "DISTRICT OF COLUMBIA", "COUNTYFP"
     ] = 11001.0
+    
+    # San Joaquin County, CA FIPS = 6077 has totalvotes as NAN. We can count them from the votes for the different parties
+    sjc_total_votes = election_df[election_df["totalvotes"].isnull()].groupby("COUNTYFP").sum().loc[6077,"candidatevotes"]
+    sjc_rows = list(election_df[election_df["totalvotes"].isnull()].index)
+    election_df.loc[election_df.index.isin(sjc_rows), "totalvotes"] = sjc_total_votes
 
     # Questions: These commented lines still needed?
     # election_df.version.unique() #array([20191203, 20210608], dtype=int64)
