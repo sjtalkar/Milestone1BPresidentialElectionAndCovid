@@ -141,10 +141,6 @@ def getElectionSegmentsData(segment_color_dict=segment_color_dict):
 
 
 ########################################################################################
-def recount_total_votes(df, county_fips):
-    total_votes = df[df["totalvotes"].isnull()].groupby("COUNTYFP").sum().loc[county_fips,"candidatevotes"]
-    
-    
 def getElectionData():
     """
         THIS FUNCTION reads in county-level presidential election vote data from 2000 to 2020,
