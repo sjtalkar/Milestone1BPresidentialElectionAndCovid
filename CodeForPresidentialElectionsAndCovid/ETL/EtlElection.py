@@ -177,6 +177,11 @@ def getElectionData():
     election_df.loc[
         election_df["CTYNAME"] == "DISTRICT OF COLUMBIA", "COUNTYFP"
     ] = 11001.0
+    
+    # San Joaquin County, CA FIPS = 6077 has totalvotes as NAN. We can count them from the votes for the different parties
+    sjc_total_votes = election_df[election_df["totalvotes"].isnull()].groupby("COUNTYFP").sum().loc[6077,"candidatevotes"]
+    sjc_rows = list(election_df[election_df["totalvotes"].isnull()].index)
+    election_df.loc[election_df.index.isin(sjc_rows), "totalvotes"] = sjc_total_votes
 
     # Questions: These commented lines still needed?
     # election_df.version.unique() #array([20191203, 20210608], dtype=int64)
