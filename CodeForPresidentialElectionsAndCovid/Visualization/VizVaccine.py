@@ -310,7 +310,7 @@ def plotStateVaccinePct(df, date_in):
             us_states,
             title={
                 "text": [
-                    "Tracking Covid Case Trend After Detection of First Delta variant in the US.",
+                    "Tracking Covid Case Resurgence After Detection of First Delta variant in the US.",
                     "In Relation to Vaccination Adoption Rates in the States",
                 ],
                 "subtitle": [
@@ -481,7 +481,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
 
     line_base = alt.Chart(
         state_case_rolling_df,
-        title="Covid cases tiemseries after emergence of Delta variant in the US",
+        title="Covid cases timeseries after emergence of Delta variant in the US in March 2021",
     )
 
     # Create the line chart base to plot tooltip points
@@ -508,8 +508,28 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         .properties(height=300, width=800)
     )
 
+    ##############################################################################################
+    delta_highlight_df = pd.DataFrame(
+        {"start_date": ["03-01-2021"], "stop_date": ["03-31-2021"]}
+    )
+    delta_highlight_df.start_date = pd.to_datetime(delta_highlight_df.start_date)
+    delta_highlight_df.stop_date = pd.to_datetime(delta_highlight_df.stop_date)
+
+    delta_rect_area = (
+        alt.Chart(delta_highlight_df.reset_index())
+        .mark_rect(opacity=0.2)
+        .encode(
+            x="start_date",
+            x2="stop_date",
+            y=alt.value(0),  # pixels from top
+            y2=alt.value(300),  # pixels from top
+            color=alt.value("lightgrey"),
+        )
+    )
+
+    ##############################################################################################
     highlight_df = pd.DataFrame(
-        {"start_date": ["06-10-2021"], "stop_date": ["07-20-2021"]}
+        {"start_date": ["07-01-2021"], "stop_date": ["07-22-2021"]}
     )
     highlight_df.start_date = pd.to_datetime(highlight_df.start_date)
     highlight_df.stop_date = pd.to_datetime(highlight_df.stop_date)
@@ -526,6 +546,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         )
     )
 
+    ##############################################################################################
     ## This is the plot of the timeseries with selections added
     state_cases_delta_chart = (
         line_base.mark_line()
@@ -682,5 +703,6 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         tooltip_text5,
         points,
         rect_area,
+        delta_rect_area,
     )
 
