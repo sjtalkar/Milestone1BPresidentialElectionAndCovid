@@ -201,7 +201,14 @@ def createDailyInteractiveVaccinationChart():
                     domain=["DEMOCRAT", "REPUBLICAN"], range=["#237ABD", "#CD2128"]
                 ),
             ),
-            tooltip=[alt.Tooltip("state_po:N", title="State: ")],
+            tooltip=[
+                alt.Tooltip("state_po:N", title="State: "),
+                alt.Tooltip(
+                    "Percent with one dose:Q",
+                    title="Percent with one dose:",
+                    format="%",
+                ),
+            ],
             size=alt.Size(
                 "Total population:Q", scale=alt.Scale(range=[150, 3000]), legend=None
             ),
