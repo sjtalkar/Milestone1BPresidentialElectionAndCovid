@@ -132,7 +132,7 @@ def getBaseChart(case_rolling_df, date_range):
             source,
             title={
                 "text": [
-                    "Year 2020 Timeseries of Confirmed Covid Cases Per 100K residents (7 day rolling average)"
+                    "Year 2020 Timeseries of Confirmed Covid Cases Per 100K Residents (7 day rolling average)"
                 ],
                 "subtitle": [
                     "Click on legend colors to select segment(s) with given political affiliation",

@@ -138,8 +138,6 @@ def createStateVaccinationChart():
     return final_chart
 
 
-
-
 #######################################################################################
 def createDailyInteractiveVaccinationChart():
     """
@@ -282,12 +280,13 @@ def createDailyInteractiveVaccinationChart():
 
     return final_chart
 
+
 #########################################################################################
 def plotStateVaccinePct(df, date_in):
 
     """
         This function generates a US state choropleth map with color scale tuned 
-        by the number of vaccinations at the latest time. 
+        by the number of vaccinations at the latest time in the data. 
 
         Input: Dataframe with State fips STATEFP, Percent with one dose and STNAME
         Output: The choropleth and the click select for each state
@@ -307,12 +306,24 @@ def plotStateVaccinePct(df, date_in):
     click = alt.selection_multi(fields=["STATEFP"], init=[{"STATEFP": 1}])
 
     chart = (
-        alt.Chart(us_states)
-        .mark_geoshape()
+        alt.Chart(
+            us_states,
+            title={
+                "text": [
+                    "Tracking Covid Case Trend After Detection of First Delta variant in the US.",
+                    "In Relation to Vaccination Adoption Rates in the States",
+                ],
+                "subtitle": [
+                    "State Level Vaccination Percent Per Population (one dose) as of June 21st, 2021",
+                    "Hover and click on State for Covid Case Timeseries",
+                ],
+            },
+        )
+        .mark_geoshape(stroke="lightgrey")
         .encode(
             color=alt.condition(
                 click,
-                alt.value("lightgray"),
+                alt.value("#00000F"),
                 alt.Color(
                     "Percent with one dose:Q",
                     scale=alt.Scale(scheme="yelloworangebrown"),
@@ -321,7 +332,7 @@ def plotStateVaccinePct(df, date_in):
             tooltip=[
                 alt.Tooltip("STNAME:N", title="State name: "),
                 alt.Tooltip(
-                    "Percent with one dose:Q", title="Population Pct with one shot : "
+                    "Percent with one dose:Q", title="Population Pct with one shot: "
                 ),
             ],
         )
@@ -333,7 +344,7 @@ def plotStateVaccinePct(df, date_in):
         )
         .add_selection(click)  ## Make sure you have added the selection here
         .project(type="albersUsa")
-        .properties(width=850, height=500)
+        .properties(width=700, height=500)
     )
 
     return chart, click
@@ -409,18 +420,18 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         state_case_rolling_df.groupby(
             ["date", "party_simplified", "party_simplified_color"]
         )
-            .agg(
+        .agg(
             cases_avg_per_100k=("cases_avg_per_100k", "mean"),
             deaths_avg_per_100k=("deaths_avg_per_100k", "mean"),
         )
-            .reset_index()
+        .reset_index()
     )
 
     # Democrat Mean
     stayed_democrat_base = getBaseChart(
         party_cases_timeseries_df[
             party_cases_timeseries_df["party_simplified"] == "STAYED_DEMOCRAT"
-            ],
+        ],
         [state_vaccine_df.date.min(), state_vaccine_df.date.max()],
     )
 
@@ -438,7 +449,7 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     stayed_republican_base = getBaseChart(
         party_cases_timeseries_df[
             party_cases_timeseries_df["party_simplified"] == "STAYED_REPUBLICAN"
-            ],
+        ],
         [state_vaccine_df.date.min(), state_vaccine_df.date.max()],
     )
 
@@ -470,13 +481,13 @@ def createCombinedVaccinationAndDeltaVariantTrend():
 
     line_base = alt.Chart(
         state_case_rolling_df,
-        title="Covid cases after emergence of Delta variant in the US",
+        title="Covid cases tiemseries after emergence of Delta variant in the US",
     )
 
     # Create the line chart base to plot tooltip points
     just_line_state_cases_delta = (
         line_base.mark_line()
-            .encode(
+        .encode(
             x=alt.X("date:T"),
             y=alt.Y("cases_avg_per_100k:Q"),
             detail="party_simplified",
@@ -494,13 +505,31 @@ def createCombinedVaccinationAndDeltaVariantTrend():
                 dropdown_selection | click, alt.value(1), alt.value(0.2)
             ),
         )
-            .properties(height=300, width=800)
+        .properties(height=300, width=800)
+    )
+
+    highlight_df = pd.DataFrame(
+        {"start_date": ["06-10-2021"], "stop_date": ["07-20-2021"]}
+    )
+    highlight_df.start_date = pd.to_datetime(highlight_df.start_date)
+    highlight_df.stop_date = pd.to_datetime(highlight_df.stop_date)
+
+    rect_area = (
+        alt.Chart(highlight_df.reset_index())
+        .mark_rect(opacity=0.2)
+        .encode(
+            x="start_date",
+            x2="stop_date",
+            y=alt.value(0),  # pixels from top
+            y2=alt.value(300),  # pixels from top
+            color=alt.value("lightgrey"),
+        )
     )
 
     ## This is the plot of the timeseries with selections added
     state_cases_delta_chart = (
         line_base.mark_line()
-            .encode(
+        .encode(
             x=alt.X("date:T"),
             y=alt.Y("cases_avg_per_100k:Q"),
             detail="party_simplified",
@@ -522,9 +551,9 @@ def createCombinedVaccinationAndDeltaVariantTrend():
                 alt.Tooltip("cases_avg_per_100k:Q", title="Cases per 100K:"),
             ],
         )
-            .properties(height=300, width=800)
-            .add_selection(dropdown_selection)
-            .add_selection(click)
+        .properties(height=300, width=800)
+        .add_selection(dropdown_selection)
+        .add_selection(click)
     )
 
     ####################################################################################################
@@ -542,9 +571,9 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     # the x-value of the cursor
     state_selectors = (
         alt.Chart(state_case_rolling_df)
-            .mark_point()
-            .encode(x="date:T", opacity=alt.value(0), )
-            .add_selection(nearest)
+        .mark_point()
+        .encode(x="date:T", opacity=alt.value(0),)
+        .add_selection(nearest)
     )
 
     # Draw points on the line, and highlight based on selection
@@ -563,12 +592,12 @@ def createCombinedVaccinationAndDeltaVariantTrend():
             # fontWeight="bold",
             lineBreak="\n",
         )
-            .encode(
+        .encode(
             text=alt.condition(
                 nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
             ),
         )
-            .transform_filter(dropdown_selection)
+        .transform_filter(dropdown_selection)
     )
 
     # Draw text labels near the points, and highlight based on selection
@@ -581,12 +610,12 @@ def createCombinedVaccinationAndDeltaVariantTrend():
             # fontWeight="bold",
             lineBreak="\n",
         )
-            .encode(
+        .encode(
             text=alt.condition(
                 nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
             ),
         )
-            .transform_filter(click)
+        .transform_filter(click)
     )
 
     # US Time series Draw text labels near the points, and highlight based on selection
@@ -633,9 +662,9 @@ def createCombinedVaccinationAndDeltaVariantTrend():
     # Draw a rule at the location of the selection
     rules = (
         alt.Chart(state_case_rolling_df)
-            .mark_rule(color="darkgrey", strokeWidth=2, strokeDash=[5, 4])
-            .encode(x="date:T", )
-            .transform_filter(nearest)
+        .mark_rule(color="darkgrey", strokeWidth=2, strokeDash=[5, 4])
+        .encode(x="date:T",)
+        .transform_filter(nearest)
     )
 
     return (
@@ -652,5 +681,6 @@ def createCombinedVaccinationAndDeltaVariantTrend():
         tooltip_text4,
         tooltip_text5,
         points,
+        rect_area,
     )
 
