@@ -12,6 +12,7 @@ from .VizBase import *
 alt.data_transformers.enable("json")
 alt.data_transformers.disable_max_rows()
 
+
 def plotCountyMaskUsage(df, mask_usage_type, color_scheme):
 
     source = df[df["mask_usage_type"] == mask_usage_type]
@@ -272,6 +273,7 @@ def createCombinedElectoralAndMaskUsageCharts():
         & alt.vconcat(a, b).resolve_scale(color="independent")
     ).configure_concat(spacing=10)
 
+
 ############################################################################################################
 ######################Mask Data Charts with interactive legend
 ############################################################################################################
@@ -318,8 +320,8 @@ def createFreqCountyMaskUsageWithRanges(_type):
                 ],
             },
         )
-            .mark_geoshape(stroke="#706545", strokeWidth=0.1)
-            .encode(
+        .mark_geoshape(stroke="#706545", strokeWidth=0.1)
+        .encode(
             color=alt.condition(
                 click, alt.value("#b38449"), alt.Color("range_color:N", scale=None),
             ),
@@ -330,7 +332,7 @@ def createFreqCountyMaskUsageWithRanges(_type):
                 alt.Tooltip("mask_usage:Q", title="Mask Usage Percent: ", format=".0%"),
             ],
         )
-            .transform_lookup(
+        .transform_lookup(
             lookup="id",
             from_=alt.LookupData(
                 source,
@@ -345,25 +347,21 @@ def createFreqCountyMaskUsageWithRanges(_type):
                 ],
             ),
         )
-            .add_selection(click)
-            .project(type="albersUsa")
-            .properties(width=750, height=500)
+        .add_selection(click)
+        .project(type="albersUsa")
+        .properties(width=750, height=500)
     )
 
     # Create interactive model name legend
     legend_democrat = (
-        alt.Chart(source[source["segmentname"] == "Democrat"], title="Democrat(2020)", )
-            .mark_point(size=100, filled=True)
-            .encode(
+        alt.Chart(source[source["segmentname"] == "Democrat"], title="Democrat(2020)",)
+        .mark_point(size=100, filled=True)
+        .encode(
             y=alt.Y(
                 "mask_usage_range:N",
                 axis=alt.Axis(orient="right"),
                 title=None,
-                sort=[
-                    "Below average (<=50%)",
-                    "Average (50%-80%)",
-                    "Exceptional (> 80%)",
-                ],
+                sort=["Low (<=50%)", "Moderate (50%-80%)", "High (>80%)",],
             ),
             color=alt.condition(
                 click,
@@ -371,19 +369,15 @@ def createFreqCountyMaskUsageWithRanges(_type):
                 alt.Color(
                     "mask_usage_range:N",
                     scale=alt.Scale(
-                        domain=[
-                            "Below average (<=50%)",
-                            "Average (50%-80%)",
-                            "Exceptional (> 80%)",
-                        ],
+                        domain=["Low (<=50%)", "Moderate (50%-80%)", "High (>80%)",],
                         range=["#C5DDF9", "#3CA0EE", "#0015BC"],
                     ),
                     legend=None,
                 ),
             ),
         )
-            .add_selection(click)
-            .properties(width=40)
+        .add_selection(click)
+        .properties(width=40)
     )
 
     legend_republican = (
@@ -391,17 +385,13 @@ def createFreqCountyMaskUsageWithRanges(_type):
             source[source["segmentname"] == "Republican"],
             title="Select: Republican(2020)",
         )
-            .mark_point(size=100, filled=True)
-            .encode(
+        .mark_point(size=100, filled=True)
+        .encode(
             y=alt.Y(
                 "mask_usage_range:N",
                 axis=alt.Axis(orient="right"),
                 title=None,
-                sort=[
-                    "Below average (<=50%)",
-                    "Average (50%-80%)",
-                    "Exceptional (> 80%)",
-                ],
+                sort=["Low (<=50%)", "Moderate (50%-80%)", "High (>80%)",],
             ),
             color=alt.condition(
                 click,
@@ -409,26 +399,22 @@ def createFreqCountyMaskUsageWithRanges(_type):
                 alt.Color(
                     "mask_usage_range:N",
                     scale=alt.Scale(
-                        domain=[
-                            "Below average (<=50%)",
-                            "Average (50%-80%)",
-                            "Exceptional (> 80%)",
-                        ],
+                        domain=["Low (<=50%)", "Moderate (50%-80%)", "High (>80%)",],
                         range=["#F2A595", "#EE8778", "#FE0000"],
                     ),
                     legend=None,
                 ),
             ),
         )
-            .add_selection(click)
-            .properties(width=40)
+        .add_selection(click)
+        .properties(width=40)
     )
 
     # create an average chart
     average_mask_chart = (
         alt.Chart(source, title=f"Avg. {_type.capitalize()} usage")
-            .mark_bar()
-            .encode(
+        .mark_bar()
+        .encode(
             y=alt.Y("mask_usage_range:N", title=None, axis=alt.Axis(orient="right")),
             x=alt.X("mean(mask_usage):Q", title=None),
             color=alt.Color(

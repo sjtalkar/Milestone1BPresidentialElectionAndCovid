@@ -5,13 +5,13 @@ from pathlib import Path
 from .EtlElection import *
 from .EtlCovid import *
 
+
 def getCountyPopulationMask():
     # Read the persidential election CSV from local disk
     population_df = pd.read_csv(
         DataFolder / r"County Data Till 2020 co-est2020-alldata.csv",
         encoding="latin-1",
     )
-
 
     county_pop_df = population_df[population_df["SUMLEV"] == 50].copy()
     county_pop_df["COUNTYFP"] = county_pop_df["STATE"].astype("str").str.pad(
@@ -100,7 +100,7 @@ def createFrequentAndInfrequentMaskUsers():
 ##########################################################################################
 def getMaskUsageRange(mask_usage):
     """This function creates ranges for percentage mask usage
-       The three ranges created are "Below average (<=50%)", "Average (50%-80%)" and "Exceptional (> 80%)"
+       The three ranges created are "Low (<=50%)", "Moderate (50%-80%)" and "High (>80%)"
 
     Args:
         mask_usage ([float]): [Estimated mask usage value]
@@ -109,11 +109,11 @@ def getMaskUsageRange(mask_usage):
         [string]: [Range of usage]
     """
     if mask_usage <= 0.5:
-        return "Below average (<=50%)"
+        return "Low (<=50%)"
     elif mask_usage > 0.5 and mask_usage <= 0.8:
-        return "Average (50%-80%)"
+        return "Moderate (50%-80%)"
     else:
-        return "Exceptional (> 80%)"
+        return "High (>80%)"
 
 
 def getColorRangeMaskUsage(segmentname, mask_usage_range):
@@ -127,14 +127,15 @@ def getColorRangeMaskUsage(segmentname, mask_usage_range):
         [string]: [Hex Code of color]
     """
     legend_dict = {
-        ("Democrat", "Below average (<=50%)"): "#C5DDF9",
-        ("Democrat", "Average (50%-80%)"): "#3CA0EE",
-        ("Democrat", "Exceptional (> 80%)"): "#0015BC",
-        ("Republican", "Below average (<=50%)"): "#F2A595",
-        ("Republican", "Average (50%-80%)"): "#EE8778",
-        ("Republican", "Exceptional (> 80%)"): "#FE0000",
+        ("Democrat", "Low (<=50%)"): "#C5DDF9",
+        ("Democrat", "Moderate (50%-80%)"): "#3CA0EE",
+        ("Democrat", "High (>80%)"): "#0015BC",
+        ("Republican", "Low (<=50%)"): "#F2A595",
+        ("Republican", "Moderate (50%-80%)"): "#EE8778",
+        ("Republican", "High (>80%)"): "#FE0000",
     }
     return legend_dict[(segmentname, mask_usage_range)]
+
 
 def createDataForFreqAndInFreqMaskUse():
     """[This function creates three dataframes]
@@ -169,8 +170,8 @@ def createDataForFreqAndInFreqMaskUse():
 
     county_pop_mask_freq_df = county_pop_mask_df[
         county_pop_mask_df["mask_usage_type"] == "FREQUENT"
-        ].copy()
+    ].copy()
     county_pop_mask_infreq_df = county_pop_mask_df[
         county_pop_mask_df["mask_usage_type"] == "NOT FREQUENT"
-        ].copy()
+    ].copy()
     return county_pop_mask_df, county_pop_mask_freq_df, county_pop_mask_infreq_df
