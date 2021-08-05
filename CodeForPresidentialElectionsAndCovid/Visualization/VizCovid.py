@@ -38,7 +38,12 @@ def createPercentPointChangeAvgDeathsChart():
     perc_point_deaths_chart = (
         alt.Chart(
             merged_df,
-            title="Covid deaths in 2020 versus Percentage point difference in votes",
+            title={
+                "text": [
+                    "Covid deaths in 2020 versus percentage point difference in votes (from 2016 to 2020)"
+                ],
+                "subtitle": ["Select party affiliation from dropdown",],
+            },
         )
         .mark_circle()
         .encode(
