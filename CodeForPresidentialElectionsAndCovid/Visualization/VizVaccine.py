@@ -206,7 +206,10 @@ def createDailyInteractiveVaccinationChart():
                 alt.Tooltip(
                     "Percent with one dose:Q",
                     title="Percent with one dose:",
-                    format="%",
+                    format=".2%",
+                ),
+                alt.Tooltip(
+                    "Total population:Q", title="Total state population:", format=",.2r"
                 ),
             ],
             size=alt.Size(

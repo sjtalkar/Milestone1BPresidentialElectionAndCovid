@@ -7,6 +7,7 @@ sys.path.append("../ETL")
 from ETL.EtlElection import *
 from ETL.EtlCovid import *
 
+# Formatting in Altair follows : https://github.com/d3/d3-format
 # uses intermediate json files to speed things up
 alt.data_transformers.enable("json")
 alt.data_transformers.disable_max_rows()
