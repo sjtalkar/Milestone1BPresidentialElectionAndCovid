@@ -415,7 +415,12 @@ def createFreqCountyMaskUsageWithRanges(_type):
         alt.Chart(source, title=f"Avg. {_type.capitalize()} usage")
         .mark_bar()
         .encode(
-            y=alt.Y("mask_usage_range:N", title=None, axis=alt.Axis(orient="right")),
+            y=alt.Y(
+                "mask_usage_range:N",
+                title=None,
+                axis=alt.Axis(orient="right"),
+                sort=["Low (<=50%)", "Moderate (50%-80%)", "High (>80%)"],
+            ),
             x=alt.X("mean(mask_usage):Q", title=None),
             color=alt.Color(
                 "segmentname:N",
