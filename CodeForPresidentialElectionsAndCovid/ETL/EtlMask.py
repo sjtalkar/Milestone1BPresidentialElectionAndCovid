@@ -29,6 +29,29 @@ def getCountyPopulationMask():
         ]
     ]
 
+    # Since county FIPS 2261 (Valdez–Cordova Census Area, Alaska)
+    # split into 2063 (Chugach Census Area) and 2066 (Copper River Census Area) in 2020,
+    # combine the population data into the older FIP so that we get mask data for it
+
+    county_pop_df.loc[
+        county_pop_df[
+            (county_pop_df["STATE"] == 2) & (county_pop_df["COUNTYFP"] == 2063)
+            | (county_pop_df["COUNTYFP"] == 2066)
+        ].index,
+        "COUNTYFP",
+    ] = 2261
+
+    county_pop_df.loc[
+        county_pop_df[
+            (county_pop_df["STATE"] == 2) & (county_pop_df["COUNTYFP"] == 2261)
+        ].index,
+        "CTYNAME",
+    ] = "(Valdez–Cordova Census Area, Alaska)"
+
+    county_pop_df = (
+        county_pop_df.groupby(["STATE", "COUNTYFP", "CTYNAME"]).agg("sum").reset_index()
+    )
+
     county_mask_df = pd.read_csv(
         r"https://raw.githubusercontent.com/nytimes/covid-19-data/master/mask-use/mask-use-by-county.csv"
     )
