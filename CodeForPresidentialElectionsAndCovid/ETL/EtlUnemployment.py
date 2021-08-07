@@ -1,6 +1,8 @@
 import re
 import pandas as pd
 import numpy as np
+import requests
+import json
 
 from pathlib import Path
 from datetime import datetime, date
@@ -9,6 +11,105 @@ from .EtlCovid import *
 
 DataFolder = Path("../DataForPresidentialElectionsAndCovid/")
 
+##########################################################################################
+# Get the unemployment data from December 2019 per county using the BLS APIs
+##########################################################################################
+def get_counties_bls_laus_codes():
+    unemployment_df = pd.read_excel(DataFolder / r"laucntycur14.xlsx",
+                                    names=["LAUS_code","state_FIPS","county_FIPS","county_name_and_state_abbreviation","Period","labor_force","employed","unemployed","unemployment_rate"],
+                                    header=5,
+                                    skipfooter=3)
+    unemployment_df["LAUS_code"] = unemployment_df["LAUS_code"].apply(lambda x: "LAU" + x + "03")
+    list_laus_codes = unemployment_df["LAUS_code"].unique()
+    pd.Series(list_laus_codes).to_csv(r"../DataForPresidentialElectionsAndCovid/bls_laus_codes.csv", header=None, index=None)
+    
+def split_codes_in_chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+    
+def get_unemployment_rates_from_api(apy_key):
+    bls_laus_codes = list(pd.read_csv(DataFolder / r"bls_laus_codes.csv", header=None).iloc[:,0])
+    #for laus_code in bls_laus_codes:
+    headers = {'Content-type': 'application/json'}
+    # The API only accepts 50 series codes per query
+    i=1
+    unemployment_df = pd.DataFrame(columns=["series_id","state_FIPS","county_FIPS","year","month","unemployment_rate","footnotes"])
+    for list_codes in split_codes_in_chunks(bls_laus_codes, 50):
+        print(str(i) + " - Querying for 50 series from " + list_codes[0] + " to " + list_codes[-1])
+        data = json.dumps({"seriesid": list_codes,"startyear":"2019", "endyear":"2021", "registrationkey": apy_key})
+        r = requests.post("https://api.bls.gov/publicAPI/v2/timeseries/data/", data=data, headers=headers)
+        if r.status_code == 200:
+            print(str(i) + " - Answer received processing the data")
+            json_data = json.loads(r.text)
+            for series in json_data['Results']['series']:
+                seriesId = series['seriesID']
+                state_fips = seriesId[5:7]
+                county_fips = seriesId[7:10]
+                for item in series['data']:
+                    year = item['year']
+                    month = int(item['period'][1:])
+                    unemployment_rate = item['value']
+                    footnotes=""
+                    for footnote in item['footnotes']:
+                        if footnote:
+                            footnotes = footnotes + footnote['text'] + ','
+
+                    if 1 <= month <= 12:
+                        _row = pd.Series([seriesId,state_fips,county_fips,year,month,unemployment_rate,footnotes[0:-1]], index=unemployment_df.columns)
+                        unemployment_df = unemployment_df.append(_row, ignore_index=True)
+            print(str(i) + " - Dataframe length = " + str(len(unemployment_df)))
+            i+=1
+        else:
+             print(str(i) + " - ERROR - code = " + str(r.status_code))
+    unemployment_df.to_csv(r"../DataForPresidentialElectionsAndCovid/bls_unemployment_rates.csv", header=None, index=None)
+
+    
+    
+##########################################################################################
+# Get the pre-pandemic December 2019 data
+##########################################################################################
+def get122021UnemploymentRate(level="county"):
+    #
+    # Prepare unemployment Data
+    # 
+    unemployment_df = pd.read_csv(DataFolder / r"bls_unemployment_rates.csv",
+                                    names=["LAUS_code","state_fips","county_FIPS","year","month","unemployment_rate","footnotes"],
+                                    header=0)
+    # Keep only the December 2019 data
+    unemployment_df = unemployment_df[(unemployment_df["year"]==2019) & (unemployment_df["month"]==12)]
+    # Format the county FIPS as the state FIPS followed by the county FIPS
+    concatenate_fips = lambda x : int(str(x["state_fips"]) + "{:03d}".format(x["county_FIPS"]))
+    unemployment_df["COUNTYFP"] = unemployment_df.apply(concatenate_fips, axis=1)
+    unemployment_df = unemployment_df.astype({"unemployment_rate": "float64"})
+    # Keep only US mainland states
+    unemployment_df = unemployment_df[unemployment_df["COUNTYFP"] < 57000]
+    unemployment_df["month"] = unemployment_df.apply(lambda x: datetime(x["year"], x["month"], 1), axis=1)
+    
+    #
+    # Merge election data at the state or county level
+    #
+    if level == "state":
+        unemployment_df.drop(columns=["county_FIPS", "LAUS_code","year","month","footnotes"], inplace=True)
+        unemployment_df = unemployment_df.groupby(["month", "state_fips"]).agg({
+            "unemployment_rate": lambda x : x.mean()})
+        unemployment_df.reset_index(inplace=True)
+        election_df = getStateLevelElectionData2020()
+        election_df = election_df[["state_po", "party_simplified"]]
+        election_df.rename(columns={"state_po": "state", "party_simplified": "party"}, inplace = True)
+        unemployment_df = pd.merge(unemployment_df, election_df, how="left", on="state_fips" )
+    else:
+        unemployment_df.drop(columns=["state_fips", "county_FIPS", "LAUS_code","year","month","footnotes"], inplace=True)
+        election_df = getElectionData()
+        election_df = election_df[["COUNTYFP", "party_winner_2020"]]
+        election_df.rename(columns={"party_winner_2020": "party"}, inplace = True)
+        unemployment_df = pd.merge(unemployment_df, election_df, how="left", on="COUNTYFP" )
+    
+    return unemployment_df
+
+##########################################################################################
+# Get the unemployment data from December 2019 per county using the BLS APIs
+##########################################################################################
 def getUnemploymentRate(level="county"):
     """
         THIS FUNCTION reads the county level unemployment rate from the 2020 dataset published by the BLS
@@ -26,7 +127,7 @@ def getUnemploymentRate(level="county"):
     # Prepare unemployment Data
     # 
     unemployment_df = pd.read_excel(DataFolder / r"laucntycur14.xlsx",
-                                    names=["LAUS_code","state_FIPS","county_FIPS","county_name_and_state_abbreviation","Period","labor_force","employed","unemployed","unemployment_rate"],
+                                    names=["LAUS_code","state_FIPS","county_FIPS","county_name_and_state_abbreviation","period","labor_force","employed","unemployed","unemployment_rate"],
                                     header=5,
                                     skipfooter=3)
     
@@ -43,11 +144,11 @@ def getUnemploymentRate(level="county"):
     unemployment_df["state"] = unemployment_df["county_name_and_state_abbreviation"].apply(extract_state_names)
     # Reformat present month which ends with " p"
     reformat_present_month = lambda x: x[:-2] if x[-2:] ==" p" else x 
-    unemployment_df["Period"] = unemployment_df["Period"].apply(reformat_present_month)
+    unemployment_df["period"] = unemployment_df["period"].apply(reformat_present_month)
     # Convert period to datetime
-    unemployment_df["month"] = pd.to_datetime(unemployment_df["Period"], format="%b-%y")
+    unemployment_df["month"] = pd.to_datetime(unemployment_df["period"], format="%b-%y")
     unemployment_df["unemployment_rate"] = unemployment_df["unemployment_rate"].astype("float64")
-    unemployment_df.drop(columns=["state_FIPS", "county_FIPS", "LAUS_code","county_name_and_state_abbreviation","Period","labor_force","employed","unemployed"], inplace=True)
+    unemployment_df.drop(columns=["state_FIPS", "county_FIPS", "LAUS_code","county_name_and_state_abbreviation","period","labor_force","employed","unemployed"], inplace=True)
     
     #
     # Prepare and merge Covid case and death rates data
