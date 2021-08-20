@@ -207,13 +207,13 @@ def createDataForMaskUsageDistribution():
 
     """
     TO_DEMOCRAT = "#11A3D6"
-    TO_REPUBLICAN = "#8C1616"
-    STAYED_DEMOCRAT = "#0015BC"
-    STAYED_REPUBLICAN = "#FF0000"
+    TO_REPUBLICAN = "#AB5A68"
+    STAYED_DEMOCRAT = "#030d97"
+    STAYED_REPUBLICAN = "#970d03"
 
     df = createFrequentAndInfrequentMaskUsers()
-    df["changecolor"] = df["changecolor"].str.replace("#11A3D6", "#0015BC")
-    df["changecolor"] = df["changecolor"].str.replace("#8C1616", "#FF0000")
+    df["changecolor"] = df["changecolor"].str.replace("#11A3D6", "#030d97")
+    df["changecolor"] = df["changecolor"].str.replace("#AB5A68", "#970d03")
     df["party"] = np.where(
         df["changecolor"] == STAYED_REPUBLICAN, "Republican", "Democrat"
     )

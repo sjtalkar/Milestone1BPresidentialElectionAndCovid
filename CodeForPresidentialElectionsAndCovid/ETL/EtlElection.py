@@ -3,13 +3,22 @@ import numpy as np
 from pathlib import Path
 
 
-# Color global variables
+# Color global variables-Original set
+# TO_OTHER = "#556B2F"
+# TO_DEMOCRAT = "#11A3D6"
+# TO_REPUBLICAN = "#8C1616"
+# STAYED_DEMOCRAT = "#0015BC"
+# STAYED_REPUBLICAN = "#FF0000"
+# STAYED_OTHER = "#B4D3B2"
+
+
 TO_OTHER = "#556B2F"
 TO_DEMOCRAT = "#11A3D6"
-TO_REPUBLICAN = "#8C1616"
-STAYED_DEMOCRAT = "#0015BC"
-STAYED_REPUBLICAN = "#FF0000"
+TO_REPUBLICAN = "#AB5A68"
+STAYED_DEMOCRAT = "#030d97"
+STAYED_REPUBLICAN = "#970d03"
 STAYED_OTHER = "#B4D3B2"
+
 
 segment_color_dict = {
     "TO_OTHER": TO_OTHER,
@@ -177,9 +186,14 @@ def getElectionData():
     election_df.loc[
         election_df["CTYNAME"] == "DISTRICT OF COLUMBIA", "COUNTYFP"
     ] = 11001.0
-    
+
     # San Joaquin County, CA FIPS = 6077 has totalvotes as NAN. We can count them from the votes for the different parties
-    sjc_total_votes = election_df[election_df["totalvotes"].isnull()].groupby("COUNTYFP").sum().loc[6077,"candidatevotes"]
+    sjc_total_votes = (
+        election_df[election_df["totalvotes"].isnull()]
+        .groupby("COUNTYFP")
+        .sum()
+        .loc[6077, "candidatevotes"]
+    )
     sjc_rows = list(election_df[election_df["totalvotes"].isnull()].index)
     election_df.loc[election_df.index.isin(sjc_rows), "totalvotes"] = sjc_total_votes
 
@@ -285,10 +299,7 @@ def getStateLevelElectionData2020():
                  fractionalvotes         (candidatevotes / totalvotes)
     """
     # Join with state level election data to color the circles
-    state_election_df = pd.read_csv(
-        DataFolder
-        / r"1976-2020-president.csv"
-    )
+    state_election_df = pd.read_csv(DataFolder / r"1976-2020-president.csv")
     state_election_df = state_election_df[state_election_df["year"] == 2020].copy()
     state_election_df.drop(
         columns=[
