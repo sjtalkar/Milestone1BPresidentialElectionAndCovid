@@ -1,0 +1,4 @@
+altair
+plotly
+pathlib
+vega_datasets 
