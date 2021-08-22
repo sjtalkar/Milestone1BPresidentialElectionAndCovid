@@ -14,6 +14,8 @@ from .VizBase import *
 alt.data_transformers.enable("json")
 alt.data_transformers.disable_max_rows()
 
+# Formatting in Altair follows : https://github.com/d3/d3-format
+
 ########################################################################################
 def createStateVaccinationChart():
 
@@ -198,7 +200,7 @@ def createDailyInteractiveVaccinationChart():
                 "party_simplified:N",
                 legend=alt.Legend(title="Presidential election choice:"),
                 scale=alt.Scale(
-                    domain=["DEMOCRAT", "REPUBLICAN"], range=["#237ABD", "#CD2128"]
+                    domain=["DEMOCRAT", "REPUBLICAN"], range=["#030d97", "#970d03"],
                 ),
             ),
             tooltip=[
@@ -250,7 +252,7 @@ def createDailyInteractiveVaccinationChart():
             x=alt.X(
                 "Percent with one dose:Q",
                 axis=alt.Axis(
-                    format="%", orient="top", values=[0, 0.2, 0.4, 0.6, 0.8, 1]
+                    format=".2%", orient="top", values=[0, 0.2, 0.4, 0.6, 0.8, 1]
                 ),
                 scale=alt.Scale(domain=[0, 1]),
                 title=None,

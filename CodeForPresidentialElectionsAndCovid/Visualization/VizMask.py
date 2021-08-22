@@ -377,7 +377,7 @@ def createFreqCountyMaskUsageWithRanges(_type):
             ),
         )
         .add_selection(click)
-        .properties(width=40)
+        .properties(width=40, height=50)
     )
 
     legend_republican = (
@@ -407,29 +407,55 @@ def createFreqCountyMaskUsageWithRanges(_type):
             ),
         )
         .add_selection(click)
-        .properties(width=40)
+        .properties(width=40, height=50)
     )
 
-    # create an average chart
+    # create an average chart with just two parties
+    small_avg_df = createDataForMaskUsageDistribution()
     average_mask_chart = (
-        alt.Chart(source, title=f"Avg. {_type.capitalize()} usage")
-        .mark_bar()
+        alt.Chart(small_avg_df, title="")
+        .mark_bar(width=5)
         .encode(
-            y=alt.Y(
-                "mask_usage_range:N",
-                title=None,
-                axis=alt.Axis(orient="right"),
-                sort=["Low (<=50%)", "Moderate (50%-80%)", "High (>80%)"],
-            ),
+            y=alt.Y("mask_usage_type:N", title=None, axis=alt.Axis(orient="right"),),
             x=alt.X("mean(mask_usage):Q", title=None),
-            color=alt.Color(
-                "segmentname:N",
-                scale=alt.Scale(
-                    domain=["Republican", "Democrat"], range=["#FE0000", "#0015BC"]
-                ),
-                legend=alt.Legend(title="Voted(2020)"),
-            ),
+            color=alt.Color("changecolor:N", scale=None, legend=None),
+            row=alt.Row("party:N", title=None,),
         )
-    ).properties(width=100)
+        .properties(width=50, height=30)
+    )
 
     return county_mask_chart, legend_republican, legend_democrat, average_mask_chart
+
+
+def createMaskUsageDistributionChart():
+    distribution_df = createDataForMaskUsageDistribution()
+
+    density_chart = (
+        alt.Chart(
+            distribution_df,
+            title={
+                "text": [
+                    "Mask Usage Survey Response Distribution by Political Affiliation"
+                ],
+                "subtitle": [
+                    "Estimates from The New York Times, based on roughly 250,000 interviews"
+                    " conducted by Dynata from July 2 to July 14, 2020."
+                ],
+            },
+        )
+        .transform_density(
+            density="mask_usage",
+            groupby=["mask_usage_type", "changecolor"],
+            as_=["mask_usage", "Density"],
+        )
+        .mark_area(orient="vertical", opacity=0.8)
+        .encode(
+            x=alt.X("mask_usage:Q", axis=alt.Axis(title=None, format=".0%")),
+            y="Density:Q",
+            color=alt.Color("changecolor:N", scale=None),
+            facet=alt.Facet("mask_usage_type:N", title=None),
+        )
+        .properties(height=200, width=400)
+    )
+
+    return density_chart

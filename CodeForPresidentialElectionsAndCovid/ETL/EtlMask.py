@@ -198,3 +198,24 @@ def createDataForFreqAndInFreqMaskUse():
         county_pop_mask_df["mask_usage_type"] == "NOT FREQUENT"
     ].copy()
     return county_pop_mask_df, county_pop_mask_freq_df, county_pop_mask_infreq_df
+
+
+##########################################################################################
+def createDataForMaskUsageDistribution():
+    """This function creates a copy of the dataframe sent in containing column changecolor
+        It replaces the changed affilition color to loyalty color.
+
+    """
+    TO_DEMOCRAT = "#11A3D6"
+    TO_REPUBLICAN = "#AB5A68"
+    STAYED_DEMOCRAT = "#030d97"
+    STAYED_REPUBLICAN = "#970d03"
+
+    df = createFrequentAndInfrequentMaskUsers()
+    df["changecolor"] = df["changecolor"].str.replace("#11A3D6", "#030d97")
+    df["changecolor"] = df["changecolor"].str.replace("#AB5A68", "#970d03")
+    df["party"] = np.where(
+        df["changecolor"] == STAYED_REPUBLICAN, "Republican", "Democrat"
+    )
+
+    return df
