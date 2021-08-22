@@ -69,28 +69,32 @@ def get_unemployment_rates_from_api(apy_key):
 ##########################################################################################
 # Get the pre-pandemic December 2019 data
 ##########################################################################################
-def get122021UnemploymentRate(level="county"):
+def getUnemploymentRateSince122019(level="county"):
     #
     # Prepare unemployment Data
     # 
     unemployment_df = pd.read_csv(DataFolder / r"bls_unemployment_rates.csv",
-                                    names=["LAUS_code","state_fips","county_FIPS","year","month","unemployment_rate","footnotes"],
+                                    names=["LAUS_code","state_fips","county_fips","year","month","unemployment_rate","footnotes"],
                                     header=0)
-    # Keep only the December 2019 data
-    unemployment_df = unemployment_df[(unemployment_df["year"]==2019) & (unemployment_df["month"]==12)]
+    # Convert year and month to datetime
+    unemployment_df["month"] = unemployment_df.apply(lambda x: datetime(x["year"], x["month"], 1), axis=1)
+    # Keep only the data after December 2019
+    unemployment_df = unemployment_df[(unemployment_df["month"]>=pd.to_datetime("2019-12", format="%Y-%m"))]
     # Format the county FIPS as the state FIPS followed by the county FIPS
-    concatenate_fips = lambda x : int(str(x["state_fips"]) + "{:03d}".format(x["county_FIPS"]))
+    concatenate_fips = lambda x : int(str(x["state_fips"]) + "{:03d}".format(x["county_fips"]))
     unemployment_df["COUNTYFP"] = unemployment_df.apply(concatenate_fips, axis=1)
-    unemployment_df = unemployment_df.astype({"unemployment_rate": "float64"})
     # Keep only US mainland states
     unemployment_df = unemployment_df[unemployment_df["COUNTYFP"] < 57000]
-    unemployment_df["month"] = unemployment_df.apply(lambda x: datetime(x["year"], x["month"], 1), axis=1)
-    
+    # Calculate for each record the number of month since the start
+    first_month = unemployment_df["month"].min().to_period("M")
+    calculate_month_since_start = lambda x : (x.to_period("M") - first_month).n + 1
+    unemployment_df["month_since_start"] = unemployment_df["month"].apply(calculate_month_since_start)
+    unemployment_df["unemployment_rate"] = unemployment_df["unemployment_rate"].astype("float64")
     #
     # Merge election data at the state or county level
     #
     if level == "state":
-        unemployment_df.drop(columns=["county_FIPS", "LAUS_code","year","month","footnotes"], inplace=True)
+        unemployment_df.drop(columns=["county_fips", "LAUS_code","year","month","footnotes"], inplace=True)
         unemployment_df = unemployment_df.groupby(["month", "state_fips"]).agg({
             "unemployment_rate": lambda x : x.mean()})
         unemployment_df.reset_index(inplace=True)
@@ -99,12 +103,11 @@ def get122021UnemploymentRate(level="county"):
         election_df.rename(columns={"state_po": "state", "party_simplified": "party"}, inplace = True)
         unemployment_df = pd.merge(unemployment_df, election_df, how="left", on="state_fips" )
     else:
-        unemployment_df.drop(columns=["state_fips", "county_FIPS", "LAUS_code","year","month","footnotes"], inplace=True)
+        unemployment_df.drop(columns=["state_fips", "county_fips", "LAUS_code","year","month","footnotes"], inplace=True)
         election_df = getElectionData()
         election_df = election_df[["COUNTYFP", "party_winner_2020"]]
         election_df.rename(columns={"party_winner_2020": "party"}, inplace = True)
         unemployment_df = pd.merge(unemployment_df, election_df, how="left", on="COUNTYFP" )
-    
     return unemployment_df
 
 ##########################################################################################
@@ -126,30 +129,24 @@ def getUnemploymentRate(level="county"):
     #
     # Prepare unemployment Data
     # 
-    unemployment_df = pd.read_excel(DataFolder / r"laucntycur14.xlsx",
-                                    names=["LAUS_code","state_FIPS","county_FIPS","county_name_and_state_abbreviation","period","labor_force","employed","unemployed","unemployment_rate"],
-                                    header=5,
-                                    skipfooter=3)
-    
+    unemployment_df = pd.read_csv(DataFolder / r"bls_unemployment_rates.csv",
+                                    names=["LAUS_code","state_fips","county_fips","year","month","unemployment_rate","footnotes"],
+                                    header=0)
+    # Convert year and month to datetime
+    unemployment_df["month"] = unemployment_df.apply(lambda x: datetime(x["year"], x["month"], 1), axis=1)
+    # Keep only the data from January 2020 (we only have Covid cases from that month)
+    unemployment_df = unemployment_df[(unemployment_df["month"]>=pd.to_datetime("2020-01", format="%Y-%m"))]
     # Format the county FIPS as the state FIPS followed by the county FIPS
-    concatenate_fips = lambda x : int(str(x["state_FIPS"]) + "{:03d}".format(x["county_FIPS"]))
+    concatenate_fips = lambda x : int(str(x["state_fips"]) + "{:03d}".format(x["county_fips"]))
     unemployment_df["COUNTYFP"] = unemployment_df.apply(concatenate_fips, axis=1)
     # Keep only US mainland states
     unemployment_df = unemployment_df[unemployment_df["COUNTYFP"] < 57000]
-    # extract state and county names
-    extract_names_regex = r"^(?P<CTYNAME>.*),\s(?P<state>[A-Z]{2})$"
-    extract_county_names = lambda x : re.search(extract_names_regex,x).group("CTYNAME") if x != "District of Columbia" else "District of Columbia"
-    extract_state_names = lambda x : re.search(extract_names_regex,x).group("state") if x != "District of Columbia" else "District of Columbia"
-    unemployment_df["CTYNAME"] = unemployment_df["county_name_and_state_abbreviation"].apply(extract_county_names)
-    unemployment_df["state"] = unemployment_df["county_name_and_state_abbreviation"].apply(extract_state_names)
-    # Reformat present month which ends with " p"
-    reformat_present_month = lambda x: x[:-2] if x[-2:] ==" p" else x 
-    unemployment_df["period"] = unemployment_df["period"].apply(reformat_present_month)
-    # Convert period to datetime
-    unemployment_df["month"] = pd.to_datetime(unemployment_df["period"], format="%b-%y")
+    # Calculate for each record the number of month since the start
+    first_month = unemployment_df["month"].min().to_period("M")
+    calculate_month_since_start = lambda x : (x.to_period("M") - first_month).n + 1
+    unemployment_df["month_since_start"] = unemployment_df["month"].apply(calculate_month_since_start)
     unemployment_df["unemployment_rate"] = unemployment_df["unemployment_rate"].astype("float64")
-    unemployment_df.drop(columns=["state_FIPS", "county_FIPS", "LAUS_code","county_name_and_state_abbreviation","period","labor_force","employed","unemployed"], inplace=True)
-    
+    unemployment_df.drop(columns=["state_fips", "county_fips", "LAUS_code","year","footnotes"], inplace=True)
     #
     # Prepare and merge Covid case and death rates data
     #
@@ -206,8 +203,6 @@ def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
             "unemployment_rate": lambda x : x.mean(),
             "cases_avg_per_100k": lambda x : x.sum(),
             "deaths_avg_per_100k": lambda x : x.sum(),
-            "CTYNAME": "first",
-            "state": "first",
             "party": "first"
         })
     unemployment_covid_july_df.reset_index(inplace=True)
