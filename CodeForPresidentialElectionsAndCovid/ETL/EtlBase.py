@@ -5,9 +5,9 @@ DataFolder = Path("../DataForPresidentialElectionsAndCovid/")
 ## Color global variables
 TO_OTHER = "#556B2F"
 TO_DEMOCRAT = "#11A3D6"
-TO_REPUBLICAN = "#8C1616"
-STAYED_DEMOCRAT = "#0015BC"
-STAYED_REPUBLICAN = "#FF0000"
+TO_REPUBLICAN = "#AB5A68"
+STAYED_DEMOCRAT = "#030D97"
+STAYED_REPUBLICAN = "#970D03"
 STAYED_OTHER = "#B4D3B2"
 
 segment_color_dict = {

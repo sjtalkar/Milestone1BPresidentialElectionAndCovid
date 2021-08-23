@@ -207,14 +207,10 @@ def createDataForMaskUsageDistribution():
         It replaces the changed affilition color to loyalty color.
 
     """
-    TO_DEMOCRAT = "#11A3D6"
-    TO_REPUBLICAN = "#AB5A68"
-    STAYED_DEMOCRAT = "#030d97"
-    STAYED_REPUBLICAN = "#970d03"
 
     df = createFrequentAndInfrequentMaskUsers()
-    df["changecolor"] = df["changecolor"].str.replace("#11A3D6", "#030d97")
-    df["changecolor"] = df["changecolor"].str.replace("#AB5A68", "#970d03")
+    df["changecolor"] = df["changecolor"].str.replace(TO_DEMOCRAT, STAYED_DEMOCRAT)
+    df["changecolor"] = df["changecolor"].str.replace(TO_REPUBLICAN, STAYED_REPUBLICAN)
     df["party"] = np.where(
         df["changecolor"] == STAYED_REPUBLICAN, "Republican", "Democrat"
     )
