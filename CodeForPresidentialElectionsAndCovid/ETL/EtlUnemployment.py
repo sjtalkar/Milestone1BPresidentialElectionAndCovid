@@ -4,12 +4,12 @@ import numpy as np
 import requests
 import json
 
-from pathlib import Path
 from datetime import datetime, date
+from .EtlBase import DataFolder
 from .EtlElection import *
 from .EtlCovid import *
 
-DataFolder = Path("../DataForPresidentialElectionsAndCovid/")
+
 
 ##########################################################################################
 # Get the unemployment data from December 2019 per county using the BLS APIs

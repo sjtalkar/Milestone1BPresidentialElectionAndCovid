@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
+from .EtlBase import DataFolder
 
 # Color global variables-Original set
 # TO_OTHER = "#556B2F"
@@ -28,8 +29,6 @@ segment_color_dict = {
     "STAYED_REPUBLICAN": STAYED_REPUBLICAN,
     "STAYED_OTHER": STAYED_OTHER,
 }
-
-DataFolder = Path("../DataForPresidentialElectionsAndCovid/")
 
 
 US_STATE_ABBRV = {
