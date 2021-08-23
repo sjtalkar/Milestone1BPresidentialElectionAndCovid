@@ -4,6 +4,7 @@ import sys
 from vega_datasets import data
 
 sys.path.append("../ETL")
+from ETL.EtlBase import segment_color_dict
 from ETL.EtlElection import *
 from ETL.EtlCovid import *
 
@@ -12,14 +13,7 @@ from ETL.EtlCovid import *
 alt.data_transformers.enable("json")
 alt.data_transformers.disable_max_rows()
 
-color_segment_dict = {
-    TO_OTHER: "To other",
-    TO_DEMOCRAT: "To Democrat",
-    TO_REPUBLICAN: "To Republican",
-    STAYED_DEMOCRAT: "Stayed Democrat",
-    STAYED_REPUBLICAN: "Stayed Republican",
-    STAYED_OTHER: "Stayed Other",
-}
+
 
 ########################################################################################
 def createCovidConfirmedTimeseriesChart(case_rolling_df):

@@ -6,6 +6,7 @@ from vega_datasets import data
 from pathlib import Path
 
 sys.path.append("../ETL")
+from ETL.EtlBase import segment_color_dict
 from ETL.EtlElection import *
 from ETL.EtlVaccine import *
 from .VizBase import *

@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 import requests
 
-from .EtlBase import DataFolder
+from .EtlBase import DataFolder, US_STATE_ABBRV
 from .EtlElection import *
 
 
