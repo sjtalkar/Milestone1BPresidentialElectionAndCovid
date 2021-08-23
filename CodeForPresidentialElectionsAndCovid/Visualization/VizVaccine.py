@@ -6,7 +6,7 @@ from vega_datasets import data
 from pathlib import Path
 
 sys.path.append("../ETL")
-from ETL.EtlBase import segment_color_dict
+from ETL.EtlBase import segment_color_dict, STAYED_REPUBLICAN, STAYED_DEMOCRAT
 from ETL.EtlElection import *
 from ETL.EtlVaccine import *
 from .VizBase import *
@@ -201,7 +201,7 @@ def createDailyInteractiveVaccinationChart():
                 "party_simplified:N",
                 legend=alt.Legend(title="Presidential election choice:"),
                 scale=alt.Scale(
-                    domain=["DEMOCRAT", "REPUBLICAN"], range=["#030d97", "#970d03"],
+                    domain=["DEMOCRAT", "REPUBLICAN"], range=[STAYED_DEMOCRAT, STAYED_REPUBLICAN],
                 ),
             ),
             tooltip=[
