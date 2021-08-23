@@ -3,6 +3,7 @@ import altair as alt
 import sys
 
 sys.path.append("../ETL")
+from ETL.EtlBase import TO_REPUBLICAN, TO_DEMOCRAT, STAYED_DEMOCRAT, STAYED_REPUBLICAN
 from ETL.EtlElection import *
 from ETL.EtlVaccine import *
 from ETL.EtlMask import *

@@ -5,17 +5,8 @@ import io
 import requests
 
 from .EtlElection import *
-from .EtlBase import DataFolder
+from .EtlBase import DataFolder, segment_color_dict, color_segment_dict
 
-
-color_segment_dict = {
-    TO_OTHER: "To other",
-    TO_DEMOCRAT: "To Democrat",
-    TO_REPUBLICAN: "To Republican",
-    STAYED_DEMOCRAT: "Stayed Democrat",
-    STAYED_REPUBLICAN: "Stayed Republican",
-    STAYED_OTHER: "Stayed Other",
-}
 
 ########################################################################################
 def csv_to_dataframe(response):
