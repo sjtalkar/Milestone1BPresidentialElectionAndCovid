@@ -1,3 +1,3 @@
 from pathlib import Path
 
-DataFolder = Path("../data/")
+DataFolder = Path("../DataForPresidentialElectionsAndCovid/")
