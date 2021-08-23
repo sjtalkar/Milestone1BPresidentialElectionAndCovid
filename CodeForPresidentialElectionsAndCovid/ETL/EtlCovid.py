@@ -5,6 +5,7 @@ import io
 import requests
 
 from .EtlElection import *
+from .EtlBase import DataFolder
 
 
 color_segment_dict = {
@@ -15,8 +16,6 @@ color_segment_dict = {
     STAYED_REPUBLICAN: "Stayed Republican",
     STAYED_OTHER: "Stayed Other",
 }
-
-DataFolder = Path("../DataForPresidentialElectionsAndCovid/")
 
 ########################################################################################
 def csv_to_dataframe(response):

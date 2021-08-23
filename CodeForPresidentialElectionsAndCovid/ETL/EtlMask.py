@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
+from .EtlBase import DataFolder
 from .EtlElection import *
 from .EtlCovid import *
 

@@ -6,6 +6,7 @@ import numpy as np
 from pathlib import Path
 import requests
 
+from .EtlBase import DataFolder
 from .EtlElection import *
 
 
