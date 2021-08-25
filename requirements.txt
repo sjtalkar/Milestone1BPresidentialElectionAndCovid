@@ -1,4 +1,7 @@
-altair
-plotly
-pathlib
-vega_datasets 
+pandas>=1.1.0
+altair==4.1.0
+plotly>=4.12.0
+pathlib==1.0.1
+vega_datasets==0.9.0
+vega==3.5.0
+requests>=2.25.1
