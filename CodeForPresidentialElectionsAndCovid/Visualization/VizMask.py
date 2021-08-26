@@ -278,10 +278,11 @@ def createCombinedElectoralAndMaskUsageCharts():
 ############################################################################################################
 ######################Mask Data Charts with interactive legend
 ############################################################################################################
-def createFreqCountyMaskUsageWithRanges(county_pop_mask_df:pd.DataFrame() = None,
+def createFreqCountyMaskUsageWithRanges(_type:str,
+        county_pop_mask_df:pd.DataFrame() = None,
         county_pop_mask_freq_df:pd.DataFrame() = None,
         county_pop_mask_infreq_df:pd.DataFrame() = None,
-        _type:str):
+        small_avg_df:pd.DataFrame() = None):
     """[This function accepts the type of Mask usage - Frequent or Infrequent and creates a
         Geo chart with colors based o nrange of frequent mask usage]
 
@@ -305,6 +306,9 @@ def createFreqCountyMaskUsageWithRanges(county_pop_mask_df:pd.DataFrame() = None
             county_pop_mask_freq_df,
             county_pop_mask_infreq_df,
         ) = createDataForFreqAndInFreqMaskUse()
+
+    if small_avg_df is None:
+        small_avg_df = createDataForMaskUsageDistribution()
 
     if _type == "FREQUENT":
         source = county_pop_mask_freq_df
@@ -416,7 +420,6 @@ def createFreqCountyMaskUsageWithRanges(county_pop_mask_df:pd.DataFrame() = None
     )
 
     # create an average chart with just two parties
-    small_avg_df = createDataForMaskUsageDistribution()
     average_mask_chart = (
         alt.Chart(small_avg_df, title="")
         .mark_bar(width=5)

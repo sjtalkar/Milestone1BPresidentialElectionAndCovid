@@ -368,7 +368,8 @@ def plotStateVaccinePct(df, date_in):
 
 def createCombinedVaccinationAndDeltaVariantTrend(state_vaccine_df:pd.DataFrame() = None,
                                                   us_case_rolling_df:pd.DataFrame() = None,
-                                                  state_case_rolling_df:pd.DataFrame() = None):
+                                                  state_case_rolling_df:pd.DataFrame() = None,
+                                                  state_election_df:pd.DataFrame() = None):
     """
                 This functions creates a Delta variant timeseries.
                 A dropdown selector is created to select  a state but the timeseries can also display the
@@ -398,12 +399,15 @@ def createCombinedVaccinationAndDeltaVariantTrend(state_vaccine_df:pd.DataFrame(
             state_case_rolling_df,
         ) = getStateVaccinationDataWithAPI()
 
+    if state_election_df is None:
+        state_election_df = getStateLevelElectionData2020()
+
     # Create the vaccination Choropleth/Geo chart
     vaccine_chart, click = plotStateVaccinePct(
         state_vaccine_df, state_vaccine_df.date.max()
     )
 
-    state_election_df = getStateLevelElectionData2020()
+
 
     state_case_rolling_df = state_case_rolling_df.merge(
         state_election_df[["state_fips", "party_simplified"]],

@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
+from ETL.EtlElection import getStateLevelElectionData2020
 from ETL.EtlCovid import (getRollingCaseAverageSegmentLevel,
                           getPercentilePointChageDeathsData)
 from ETL.EtlVaccine import (getDailyVaccinationPercentData,
@@ -33,6 +34,9 @@ if __name__ == '__main__':
     state_vaccine_df.to_csv(path_or_buf ="./streamlit_data/state_vaccine_df.csv", index=False)
     us_case_rolling_df.to_csv(path_or_buf ="./streamlit_data/us_case_rolling_df.csv", index=False)
     state_case_rolling_df.to_csv(path_or_buf ="./streamlit_data/state_case_rolling_df.csv", index=False)
+
+    state_election_df = getStateLevelElectionData2020()
+    state_election_df.to_csv(path_or_buf ="./streamlit_data/state_election_df.csv", index=False)
 
     mask_distribution_df = createDataForMaskUsageDistribution()
     mask_distribution_df.to_csv(path_or_buf ="./streamlit_data/mask_distribution_df.csv", index=False)
