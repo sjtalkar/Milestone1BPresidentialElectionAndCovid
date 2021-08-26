@@ -3,7 +3,9 @@ import pandas as pd
 import numpy as np
 import requests
 import json
+import sys
 
+sys.path.append("../ETL")
 from datetime import datetime, date
 from .EtlBase import DataFolder
 from .EtlElection import *

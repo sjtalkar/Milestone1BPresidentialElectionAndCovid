@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import sys
 
+sys.path.append("../ETL")
 from .EtlBase import DataFolder, TO_REPUBLICAN, TO_DEMOCRAT, STAYED_DEMOCRAT, STAYED_REPUBLICAN
 from .EtlElection import *
 from .EtlCovid import *
