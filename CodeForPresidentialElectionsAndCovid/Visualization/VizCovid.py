@@ -14,7 +14,7 @@ alt.data_transformers.enable("json")
 alt.data_transformers.disable_max_rows()
 
 
-def createPercentPointChangeAvgDeathsChart():
+def createPercentPointChangeAvgDeathsChart(df:pd.DataFrame() = None):
 
     """
       THIS FUNCTION showing average COVID deaths versus percent change for each political affiliation.
@@ -26,10 +26,11 @@ def createPercentPointChangeAvgDeathsChart():
       Returns: Percent point change chart
     """
 
-    merged_df = getPercentilePointChageDeathsData()
+    if df is None:
+        df = getPercentilePointChageDeathsData()
 
     input_dropdown = alt.binding_select(
-        options=merged_df["segmentname"].unique().tolist(), name="Affiliation: "
+        options=df["segmentname"].unique().tolist(), name="Affiliation: "
     )
     selection = alt.selection_single(
         fields=["segmentname"], bind=input_dropdown, name="Affiliation: "
@@ -37,7 +38,7 @@ def createPercentPointChangeAvgDeathsChart():
 
     perc_point_deaths_chart = (
         alt.Chart(
-            merged_df,
+            df,
             title={
                 "text": [
                     "Covid deaths in 2020 versus percentage point difference in votes (from 2016 to 2020)"
