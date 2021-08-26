@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import sys
 
+sys.path.append("../ETL")
 from .EtlBase import DataFolder, segment_color_dict
 
 

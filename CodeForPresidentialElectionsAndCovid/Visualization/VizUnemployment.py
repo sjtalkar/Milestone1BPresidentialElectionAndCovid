@@ -4,7 +4,10 @@ import sys
 
 sys.path.append("../ETL")
 from ETL.EtlBase import segment_color_dict
-from ETL.EtlUnemployment import getUnemploymentRate, getUnemploymentRateSince122019, getJuly2020UnemploymentAndMask, getUnemploymentAndVaccine
+from ETL.EtlUnemployment import (getUnemploymentRate,
+                                 getUnemploymentRateSince122019,
+                                 getJuly2020UnemploymentAndMask,
+                                 getUnemploymentAndVaccine)
 from ETL.EtlElection import getStateLevelElectionData2020
 from ETL.EtlCovid import *
 

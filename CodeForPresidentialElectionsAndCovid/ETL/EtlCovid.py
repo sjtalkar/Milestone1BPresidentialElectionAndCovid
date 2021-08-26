@@ -3,7 +3,9 @@ import numpy as np
 from pathlib import Path
 import io
 import requests
+import sys
 
+sys.path.append("../ETL")
 from .EtlElection import *
 from .EtlBase import DataFolder, segment_color_dict, color_segment_dict
 
