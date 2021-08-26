@@ -142,7 +142,7 @@ def createStateVaccinationChart():
 
 
 #######################################################################################
-def createDailyInteractiveVaccinationChart():
+def createDailyInteractiveVaccinationChart(df:pd.DataFrame() = None):
     """
         THIS FUNCTION creates an interactive chart. A slider is provided that starts from the first day any resident 
         received vaccination and can be moved up until June 28, 2021.
@@ -153,18 +153,18 @@ def createDailyInteractiveVaccinationChart():
         The size of the state bubble is proportional to the population of the state.
     
     """
+    if df is None:
+        df = getDailyVaccinationPercentData()
 
-    full_source = getDailyVaccinationPercentData()
-
-    max_value = full_source["Total population"].max()
-    min_value = full_source["Total population"].min()
-    full_source["y_center"] = (
-        (full_source["Total population"] - min_value) / (max_value - min_value)
+    max_value = df["Total population"].max()
+    min_value = df["Total population"].min()
+    df["y_center"] = (
+                             (df["Total population"] - min_value) / (max_value - min_value)
     ) + 0.5
 
     # Create Slider
-    min_day_num = full_source.day_num.min()
-    max_day_num = full_source.day_num.max()
+    min_day_num = df.day_num.min()
+    max_day_num = df.day_num.max()
     slider = alt.binding_range(
         min=min_day_num,
         max=max_day_num,
@@ -177,7 +177,7 @@ def createDailyInteractiveVaccinationChart():
 
     big_chart = (
         alt.Chart(
-            full_source,
+            df,
             title=[
                 "Percentage of state’s population age 18 and older that has received",
                 "at least one dose of a COVID-19 vaccine as of June 26th, 2021",
@@ -230,7 +230,7 @@ def createDailyInteractiveVaccinationChart():
     )
 
     big_chart_text = (
-        alt.Chart(full_source)
+        alt.Chart(df)
         .mark_text(
             align="left",
             baseline="middle",
@@ -246,7 +246,7 @@ def createDailyInteractiveVaccinationChart():
     )
 
     small_chart = (
-        alt.Chart(full_source, title="Percentage of people vaccinated wih one dose")
+        alt.Chart(df, title="Percentage of people vaccinated wih one dose")
         .mark_point(filled=True, opacity=1)
         .transform_filter(slider_selection)
         .encode(
@@ -366,7 +366,9 @@ def plotStateVaccinePct(df, date_in):
 #########################################################################################
 
 
-def createCombinedVaccinationAndDeltaVariantTrend():
+def createCombinedVaccinationAndDeltaVariantTrend(state_vaccine_df:pd.DataFrame() = None,
+                                                  us_case_rolling_df:pd.DataFrame() = None,
+                                                  state_case_rolling_df:pd.DataFrame() = None):
     """
                 This functions creates a Delta variant timeseries.
                 A dropdown selector is created to select  a state but the timeseries can also display the
@@ -388,12 +390,13 @@ def createCombinedVaccinationAndDeltaVariantTrend():
                 points (Points to display the tootip text)
         """
 
-    # Retrieve the data
-    (
-        state_vaccine_df,
-        us_case_rolling_df,
-        state_case_rolling_df,
-    ) = getStateVaccinationDataWithAPI()
+    if (state_vaccine_df is None) or (us_case_rolling_df is None) or (state_case_rolling_df is None):
+        # Retrieve the data
+        (
+            state_vaccine_df,
+            us_case_rolling_df,
+            state_case_rolling_df,
+        ) = getStateVaccinationDataWithAPI()
 
     # Create the vaccination Choropleth/Geo chart
     vaccine_chart, click = plotStateVaccinePct(

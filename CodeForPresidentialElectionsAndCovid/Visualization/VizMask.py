@@ -278,7 +278,10 @@ def createCombinedElectoralAndMaskUsageCharts():
 ############################################################################################################
 ######################Mask Data Charts with interactive legend
 ############################################################################################################
-def createFreqCountyMaskUsageWithRanges(_type):
+def createFreqCountyMaskUsageWithRanges(county_pop_mask_df:pd.DataFrame() = None,
+        county_pop_mask_freq_df:pd.DataFrame() = None,
+        county_pop_mask_infreq_df:pd.DataFrame() = None,
+        _type:str):
     """[This function accepts the type of Mask usage - Frequent or Infrequent and creates a
         Geo chart with colors based o nrange of frequent mask usage]
 
@@ -295,12 +298,13 @@ def createFreqCountyMaskUsageWithRanges(_type):
         fields=["range_color"], init={"range_color": "#FE0000"}
     )
 
-    # Get data
-    (
-        county_pop_mask_df,
-        county_pop_mask_freq_df,
-        county_pop_mask_infreq_df,
-    ) = createDataForFreqAndInFreqMaskUse()
+    if (county_pop_mask_df is None) or (county_pop_mask_freq_df is None) or (county_pop_mask_infreq_df is None):
+        # Get data
+        (
+            county_pop_mask_df,
+            county_pop_mask_freq_df,
+            county_pop_mask_infreq_df,
+        ) = createDataForFreqAndInFreqMaskUse()
 
     if _type == "FREQUENT":
         source = county_pop_mask_freq_df
@@ -428,12 +432,13 @@ def createFreqCountyMaskUsageWithRanges(_type):
     return county_mask_chart, legend_republican, legend_democrat, average_mask_chart
 
 
-def createMaskUsageDistributionChart():
-    distribution_df = createDataForMaskUsageDistribution()
+def createMaskUsageDistributionChart(df:pd.DataFrame() = None):
+    if df is None:
+        df = createDataForMaskUsageDistribution()
 
     density_chart = (
         alt.Chart(
-            distribution_df,
+            df,
             title={
                 "text": [
                     "Mask Usage Survey Response Distribution by Political Affiliation"
