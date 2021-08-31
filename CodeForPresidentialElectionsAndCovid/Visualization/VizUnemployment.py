@@ -40,7 +40,7 @@ def createUnemploymentChart(df:pd.DataFrame() = None):
     # Create the slider for the month
     month_selector = createMonthSlider(df=df, month_text="Number of elapsed months (1 = December 2019) : ")
     # Prepare the plot itself
-    unemployment_chart = alt.Chart(df).transform_filter(month_selector).transform_density(
+    unemployment_chart = alt.Chart(df, width=400, height=400).transform_filter(month_selector).transform_density(
         density="unemployment_rate",
         groupby=["party"],
         as_=["unemployment_rate", "density"]
@@ -156,10 +156,7 @@ def createUnemploymentMaskChart(df:pd.DataFrame() = None):
                     title="Unemployment Rate",
                     scale=alt.Scale(domain=unemployment_domain, type="sqrt"))
             )
-            corr_text = mask_plot.mark_text(
-                align="left",
-                baseline="top"
-            ).encode(
+            corr_text = mask_plot.mark_text(align="left", baseline="top", dx=+5, dy=-15, fontSize=12).encode(
                 x=alt.value(15),  # pixels from left
                 y=alt.value(5),  # pixels from top
                 text=alt.value(f"corr: {corr:.3f}"),
