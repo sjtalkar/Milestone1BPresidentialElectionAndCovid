@@ -8,7 +8,10 @@ from ETL.EtlVaccine import (getDailyVaccinationPercentData,
                             getStateVaccinationDataWithAPI)
 from ETL.EtlMask import (createDataForMaskUsageDistribution,
                             createDataForFreqAndInFreqMaskUse)
-
+from ETL.EtlUnemployment import (getUnemploymentRateSince122019,
+                                getUnemploymentRate,
+                                 getJuly2020UnemploymentAndMask,
+                                 getUnemploymentAndVaccine)
 #
 # This script runs all the functions used to processed all the datasets used in the different visualizaionts
 # It then saves all those processed datasets in files to be used in Streamlit. This is done to speed-up the loading time
@@ -45,3 +48,16 @@ if __name__ == '__main__':
     county_pop_mask_df.to_csv(path_or_buf ="./streamlit_data/county_pop_mask_df.csv", index=False)
     county_pop_mask_freq_df.to_csv(path_or_buf ="./streamlit_data/county_pop_mask_freq_df.csv", index=False)
     county_pop_mask_infreq_df.to_csv(path_or_buf ="./streamlit_data/county_pop_mask_infreq_df.csv", index=False)
+
+    unemployment_rate_since_2019_df = getUnemploymentRateSince122019()
+    unemployment_rate_since_2019_df.to_csv(path_or_buf="./streamlit_data/unemployment_rate_since_2019_df.csv",
+                                           index=False)
+
+    unemployment_covid_df = getUnemploymentRate("county")
+    unemployment_covid_df.to_csv(path_or_buf="./streamlit_data/unemployment_covid_df.csv", index=False)
+
+    unemployment_and_mask_df = getJuly2020UnemploymentAndMask("county", unemployment_covid_df)
+    unemployment_and_mask_df.to_csv(path_or_buf="./streamlit_data/unemployment_and_mask_df.csv", index=False)
+
+    unemployment_and_vaccine_df = getUnemploymentAndVaccine(unemployment_covid_df=unemployment_covid_df)
+    unemployment_and_vaccine_df.to_csv(path_or_buf="./streamlit_data/unemployment_and_vaccine_df.csv", index=False)
