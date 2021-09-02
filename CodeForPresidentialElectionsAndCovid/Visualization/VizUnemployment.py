@@ -97,14 +97,17 @@ def createUnemploymentCovidCasesChart(df:pd.DataFrame()=None):
             title="Unemployment Rate",
             scale=alt.Scale(
                 domain=unemployment_domain,
-                type="sqrt")
+                type="sqrt"
+            )
         ),
         x=alt.X(
             "cases_avg_per_100k:Q",
             title="Monthly Total of Daily Average Covid Cases per 100k",
             scale=alt.Scale(
                 domain=covid_cases_domain,
-                type="sqrt")),
+                type="sqrt"
+            )
+        ),
         color=alt.Color("party:N", scale=alt.Scale(domain=party_domain, range=party_range),
                         title="Party", legend=None)
     ).configure_title(
@@ -144,12 +147,15 @@ def createUnemploymentCovidDeathChart(df:pd.DataFrame() = None):
             "unemployment_rate:Q",
             title="Unemployment Rate",
             scale=alt.Scale(domain=unemployment_domain,
-                            type="sqrt")),
+                            type="sqrt"
+            )
+        ),
         x=alt.X(
             "deaths_avg_per_100k:Q",
             title="Monthly Total of Daily Average Covid Deaths per 100k",
             scale=alt.Scale(domain=covid_deaths_domain,
-                            type="sqrt")
+                            type="sqrt"
+            )
         ),
         color=alt.Color("party:N", scale=alt.Scale(domain=party_domain, range=party_range),
                         title="Party", legend=None)
@@ -187,7 +193,7 @@ def createUnemploymentMaskChart(df:pd.DataFrame() = None):
                 y=alt.Y(
                     "unemployment_rate:Q",
                     title="Unemployment Rate",
-                    scale=alt.Scale(domain=unemployment_domain, type="sqrt"))
+                    scale=alt.Scale(domain=unemployment_domain))
             )
             corr_text = mask_plot.mark_text(align="left", baseline="top", dx=+5, dy=-15, fontSize=12).encode(
                 x=alt.value(15),  # pixels from left
@@ -223,8 +229,7 @@ def createUnemploymentVaccineChart(df:pd.DataFrame() = None):
             "text": [
                 "Correlation between monthly unemployment rate and percentage of people with at least 1 vaccine dose"
             ],
-            "subtitle": ["on a square root scale",
-                         "Move the month slider at the bottom (1 = January 2020)",],
+            "subtitle": ["Move the month slider at the bottom (1 = January 2020)",],
         }
     ).transform_filter(alt.datum.percent_with_1_dose > 0).mark_point(filled=True, size=30).encode(
         y=alt.Y(
@@ -232,7 +237,7 @@ def createUnemploymentVaccineChart(df:pd.DataFrame() = None):
             title="Unemployment Rate",
             scale=alt.Scale(
                 domain=unemployment_domain,
-                type="sqrt")
+            )
         ),
         x=alt.X(
             "percent_with_1_dose:Q",
