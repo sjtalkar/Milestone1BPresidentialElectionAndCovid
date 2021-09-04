@@ -174,8 +174,11 @@ def createUnemploymentMaskChart(df:pd.DataFrame() = None):
     never_wear_mask_domain = [0, 1]
     # Prepare the plot base for the 5 plots (one for each mask usage)
     mask_plot_base = alt.Chart(df).mark_point(filled=True, size=30).encode(
-        color=alt.Color("party:N", scale=alt.Scale(domain=party_domain, range=party_range),
-                        title="Party", legend=None)
+        color=alt.Color(
+            "party:N",
+            scale=alt.Scale(domain=party_domain, range=party_range),
+            title="Party",
+            legend=None)
     ).properties(
         width=400, height=400,
     )
@@ -195,20 +198,24 @@ def createUnemploymentMaskChart(df:pd.DataFrame() = None):
                     title="Unemployment Rate",
                     scale=alt.Scale(domain=unemployment_domain))
             )
-            corr_text = mask_plot.mark_text(align="left", baseline="top", dx=+5, dy=-15, fontSize=12).encode(
-                x=alt.value(15),  # pixels from left
-                y=alt.value(5),  # pixels from top
-                text=alt.value(f"corr: {corr:.3f}"),
-                color=alt.value("black")
+            mask_plot = mask_plot.properties(
+                title={
+                    "text": [""],
+                    "subtitle": [f"Pearson correlation {corr:.3f}"],
+                }
             )
+
             corr_line = mask_plot.transform_regression(chart_value, "unemployment_rate").mark_line(
                 color="black").encode(color=alt.value("black"))
-            row |= mask_plot + corr_text + corr_line
+            row |= mask_plot + corr_line
         unemployment_vs_mask_plot &= row
 
     unemployment_vs_mask_plot = unemployment_vs_mask_plot.properties(
         title="Correlation between monthly unemployment rate and mask usage in July 2020"
-    )
+    ).configure_title(
+                align="left",
+                anchor="start"
+            )
 
     return unemployment_vs_mask_plot
 
