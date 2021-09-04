@@ -66,7 +66,7 @@ def get_unemployment_rates_from_api(apy_key):
              print(str(i) + " - ERROR - code = " + str(r.status_code))
     unemployment_df.to_csv(r"../DataForPresidentialElectionsAndCovid/bls_unemployment_rates.csv", header=None, index=None)
 
-    
+
     
 ##########################################################################################
 # Get the pre-pandemic December 2019 data
@@ -189,7 +189,7 @@ def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
     if unemployment_covid_df is None:
         unemployment_covid_df = getUnemploymentRate(level)
     county_mask_df = pd.read_csv( DataFolder / r"mask-use-by-county.csv",index_col=0)
-    juky_2020 = pd.to_datetime("2020-07", format="%Y-%m").to_period('M')
+    july_2020 = pd.to_datetime("2020-07", format="%Y-%m").to_period('M')
     
     # Mask Data are from July 2020
     # So keep only the unemployment and covid data until July 2020 and aggregate
