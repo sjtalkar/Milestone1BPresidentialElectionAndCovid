@@ -183,7 +183,8 @@ def getCasesRollingAveragePer100K():
     # case_rolling_df = pd.read_csv(r"https://raw.githubusercontent.com/nytimes/ \
     #                                    covid-19-data/master/rolling-averages/us-counties.csv")
     case_rolling_df = pd.read_csv(
-        DataFolder / r"june 26 _rolling_average_us-counties.csv"
+        DataFolder / r"sept_4_rolling_average_us-counties.zip",
+        compression="zip"
     )
     case_rolling_df["date"] = pd.to_datetime(case_rolling_df["date"])
     case_rolling_df.sort_values(by=["state", "county", "date"], inplace=True)
