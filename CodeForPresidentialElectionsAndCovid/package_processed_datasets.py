@@ -56,8 +56,12 @@ if __name__ == '__main__':
     unemployment_covid_df = getUnemploymentRate("county")
     unemployment_covid_df.to_csv(path_or_buf="./streamlit_data/unemployment_covid_df.csv", index=False)
 
-    unemployment_and_mask_df = getJuly2020UnemploymentAndMask("county", unemployment_covid_df)
-    unemployment_and_mask_df.to_csv(path_or_buf="./streamlit_data/unemployment_and_mask_df.csv", index=False)
+    unemployment_freq_mask_july_df, unemployment_infreq_mask_july_df = getJuly2020UnemploymentAndMask(
+        "county", unemployment_covid_df)
+    unemployment_freq_mask_july_df.to_csv(path_or_buf="./streamlit_data/unemployment_freq_mask_july_df.csv",
+                                          index=False)
+    unemployment_infreq_mask_july_df.to_csv(path_or_buf="./streamlit_data/unemployment_infreq_mask_july_df.csv",
+                                          index=False)
 
     unemployment_and_vaccine_df = getUnemploymentAndVaccine(unemployment_covid_df=unemployment_covid_df)
     unemployment_and_vaccine_df.to_csv(path_or_buf="./streamlit_data/unemployment_and_vaccine_df.csv", index=False)

@@ -465,6 +465,9 @@ def createMaskUsageDistributionChart(df:pd.DataFrame() = None):
             facet=alt.Facet("mask_usage_type:N", title=None),
         )
         .properties(height=200, width=400)
+    ).configure_title(
+        align="left",
+        anchor="start"
     )
 
     return density_chart

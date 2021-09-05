@@ -184,13 +184,12 @@ def getUnemploymentRate(level="county"):
         unemployment_covid_df = pd.merge(unemployment_covid_df, election_df, how="left", on="COUNTYFP" )
     return unemployment_covid_df
 
-
 def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
     if unemployment_covid_df is None:
         unemployment_covid_df = getUnemploymentRate(level)
     county_mask_df = pd.read_csv( DataFolder / r"mask-use-by-county.csv",index_col=0)
     july_2020 = pd.to_datetime("2020-07", format="%Y-%m").to_period('M')
-    
+
     # Mask Data are from July 2020
     # So keep only the unemployment and covid data until July 2020 and aggregate
     unemployment_covid_july_df = unemployment_covid_df[unemployment_covid_df["month"] <= july_2020]
@@ -202,13 +201,13 @@ def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
             "party": "first"
         })
     unemployment_covid_july_df.reset_index(inplace=True)
-    
+
     # Merge the Mask dataset
-    unemployment_covid_july_df = pd.merge(unemployment_covid_july_df, county_mask_df, how="left", on="COUNTYFP")
-    
+    unemployment_mask_july_df = pd.merge(unemployment_covid_july_df, county_mask_df, how="left", on="COUNTYFP")
+
     # If we look at "state" level, aggregate by state
     if level == "state":
-        unemployment_covid_july_df = unemployment_covid_july_df.groupby(["state"]).agg({
+        unemployment_mask_july_df = unemployment_mask_july_df.groupby(["state"]).agg({
                 "unemployment_rate": lambda x : x.mean(),
                 "cases_avg_per_100k": lambda x : x.sum(),
                 "deaths_avg_per_100k": lambda x : x.sum(),
@@ -219,8 +218,52 @@ def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
                 "FREQUENTLY": lambda x : x.mean(),
                 "ALWAYS": lambda x : x.mean()
             })
-        unemployment_covid_july_df.reset_index(inplace=True)
-    return unemployment_covid_july_df
+        unemployment_mask_july_df.reset_index(inplace=True)
+
+    unemployment_mask_july_df = unemployment_mask_july_df.melt(
+        id_vars=[
+            "COUNTYFP",
+            "unemployment_rate",
+            "cases_avg_per_100k",
+            "deaths_avg_per_100k",
+            "party",
+        ],
+        value_vars=["NEVER", "RARELY", "SOMETIMES", "FREQUENTLY", "ALWAYS"],
+        var_name="mask_usage_type",
+        value_name="mask_usage",
+        col_level=None,
+        ignore_index=True,
+    )
+
+    # Create two groups
+    unemployment_mask_july_df["mask_usage_type"] = pd.Series(
+        np.where(
+            unemployment_mask_july_df["mask_usage_type"].isin(["ALWAYS", "FREQUENTLY"]),
+            "FREQUENT",
+            "NOT FREQUENT",
+        )
+    )
+    # Add up the new groupings of FREQUENT AND NON FREQUENT
+    unemployment_mask_july_df = (
+        unemployment_mask_july_df.groupby(
+            [
+                "COUNTYFP",
+                "unemployment_rate",
+                "cases_avg_per_100k",
+                "deaths_avg_per_100k",
+                "party",
+                "mask_usage_type",
+            ]
+        )["mask_usage"]
+            .sum()
+            .reset_index()
+    )
+    unemployment_freq_mask_july_df = unemployment_mask_july_df[
+        unemployment_mask_july_df["mask_usage_type"] == "FREQUENT"]
+    unemployment_infreq_mask_july_df = unemployment_mask_july_df[
+        unemployment_mask_july_df["mask_usage_type"] == "NOT FREQUENT"]
+    return unemployment_freq_mask_july_df, unemployment_infreq_mask_july_df
+
 
 def getUnemploymentAndVaccine(level="county", unemployment_covid_df=None):
     if unemployment_covid_df is None:

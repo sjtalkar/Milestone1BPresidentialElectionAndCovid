@@ -76,6 +76,15 @@ def createUnemploymentCovidCasesChart(df:pd.DataFrame()=None):
         df = getUnemploymentRate("county")
         df.dropna(inplace=True)
         df.drop(columns=["month"], inplace=True)
+    # Get a matrix of the covid cases/unemployment correlation per month
+    corr_series=df[["month_since_start", "unemployment_rate", "cases_avg_per_100k"]].groupby(
+        ["month_since_start"])[["unemployment_rate", "cases_avg_per_100k"]].corr().iloc[0::2, -1]
+    corr_df = corr_series.reset_index()
+    corr_df.drop(columns=["level_1"], inplace=True)
+    corr_df.rename(columns={"cases_avg_per_100k": "correlation"}, inplace=True)
+
+    df = pd.merge(df, corr_df, how="left", on=["month_since_start"])
+
     unemployment_domain = [0, int(df["unemployment_rate"].max() / 10 + 1) * 10]
     covid_cases_domain = [0, int(df["cases_avg_per_100k"].max()/1000+1)*1000]
     month_selector = createMonthSlider(df=df,
@@ -90,8 +99,7 @@ def createUnemploymentCovidCasesChart(df:pd.DataFrame()=None):
                 "Correlation, per month, and average Covid-19 cases per 100k and unemployment rate"
             ],
             "subtitle": ["on a square root scale",
-                         "Move the month slider at the bottom (1 = January 2020)",
-                         "The black line shows a linear regression model of average Covid-19 cases according to unemployment rate"],
+                         "Move the month slider at the bottom (1 = January 2020)"],
         }
     ).transform_filter(alt.datum.cases_avg_per_100k > 0).mark_point(filled=True, size=30).encode(
         x=alt.X(
@@ -114,16 +122,28 @@ def createUnemploymentCovidCasesChart(df:pd.DataFrame()=None):
                         title="Party", legend=None)
     )
 
-    final_chart=(unemployment_vs_covid_plot + unemployment_vs_covid_plot.transform_regression(
-        "unemployment_rate",
-        "cases_avg_per_100k"
-    ).mark_line(color="black").encode(color=alt.value("black"))).add_selection(
-       month_selector
-    ).transform_filter(month_selector).configure_title(
+    unemployment_vs_covid_corr = alt.Chart(df).mark_text(
+        align='left', baseline='bottom', dx=+5, dy=-5, fontSize=12,
+    ).encode(
+        x=alt.value(df["correlation"].max()),
+        text="_label:N",
+    ).transform_calculate(
+        _label='"Pearson correlation = " + format(datum.x, ".2f")',
+    )
+
+    #final_chart=(unemployment_vs_covid_plot + unemployment_vs_covid_plot.transform_regression(
+    #    "unemployment_rate",
+    #    "cases_avg_per_100k"
+    #).mark_line(color="black").encode(color=alt.value("black")) + unemployment_vs_covid_corr).add_selection(
+    #   month_selector
+    #).transform_filter(month_selector).configure_title(
+    #    align="left",
+    #    anchor="start"
+    #)
+    final_chart=(unemployment_vs_covid_plot+unemployment_vs_covid_corr).add_selection(month_selector).transform_filter(month_selector).configure_title(
         align="left",
         anchor="start"
     )
-    #final_chart=unemployment_vs_covid_plot.add_selection(month_selector).transform_filter(month_selector)
     return final_chart
 
 def createUnemploymentCovidDeathChart(df:pd.DataFrame() = None):
@@ -145,8 +165,7 @@ def createUnemploymentCovidDeathChart(df:pd.DataFrame() = None):
                 "Correlation, per month, between and average Covid-19 deaths per 100k and unemployment rate"
             ],
             "subtitle": ["on a square root scale",
-                         "Move the month slider at the bottom (1 = January 2020)",
-                         "The black line shows a linear regression model of average Covid-19 deaths according to unemployment rate"],
+                         "Move the month slider at the bottom (1 = January 2020)"],
         }
     ).transform_filter(alt.datum.deaths_avg_per_100k > 0).mark_point(filled=True, size=30).encode(
         x=alt.X(
@@ -173,55 +192,80 @@ def createUnemploymentCovidDeathChart(df:pd.DataFrame() = None):
     )
     return unemployment_vs_covid_plot
 
-def createUnemploymentMaskChart(df:pd.DataFrame() = None):
-    if df is None:
-        df = getJuly2020UnemploymentAndMask("county", getUnemploymentRate("county"))
-    unemployment_domain = [0, int(df["unemployment_rate"].max() / 10 + 1) * 10]
+def createUnemploymentMaskChart(freq_df:pd.DataFrame() = None, infreq_df:pd.DataFrame() = None):
+    if (freq_df is None) or (infreq_df is None):
+        freq_df, infreq_df = getJuly2020UnemploymentAndMask("county", getUnemploymentRate("county"))
+
+    unemployment_domain = [0, max(
+        int(freq_df["unemployment_rate"].max() / 10 + 1) * 10,
+        int(infreq_df["unemployment_rate"].max() / 10 + 1) * 10
+    )]
     never_wear_mask_domain = [0, 1]
-    # Prepare the plot base for the 5 plots (one for each mask usage)
-    mask_plot_base = alt.Chart(df).mark_point(filled=True, size=30).encode(
+    # Prepare the plot for FREQUENT mask usage
+    freq_mask_corr = freq_df["unemployment_rate"].corr(freq_df["mask_usage"])
+    freq_mask_plot = alt.Chart(
+        freq_df,
+        width=400,
+        height=400,
+        title={
+            "text": [""],
+            "subtitle": [f"Pearson correlation {freq_mask_corr:.3f}"],
+        }
+    ).mark_point(filled=True, size=30).encode(
         color=alt.Color(
             "party:N",
             scale=alt.Scale(domain=party_domain, range=party_range),
             title="Party",
             legend=None)
-    ).properties(
-        width=400, height=400,
+    ).encode(
+        y=alt.Y(
+            "mask_usage:Q",
+            title=f"Percentage of people saying they 'frequently' wear a mask"
+        ),
+        x=alt.X(
+            "unemployment_rate:Q",
+            title="Unemployment Rate",
+            scale=alt.Scale(domain=unemployment_domain))
     )
-    # Prepare the 5 plots
-    unemployment_vs_mask_plot = alt.vconcat()
-    for row_values in [["NEVER", "ALWAYS"], ["RARELY", "FREQUENTLY"], ["SOMETIMES"]]:
-        row = alt.hconcat()
-        for chart_value in row_values:
-            corr = df["unemployment_rate"].corr(df[chart_value])
-            mask_plot = mask_plot_base.encode(
-                y=alt.Y(
-                    chart_value,
-                    title=f"Percentage of people saying they '{chart_value.lower()}' wear a mask"
-                ),
-                x=alt.X(
-                    "unemployment_rate:Q",
-                    title="Unemployment Rate",
-                    scale=alt.Scale(domain=unemployment_domain))
-            )
-            mask_plot = mask_plot.properties(
-                title={
-                    "text": [""],
-                    "subtitle": [f"Pearson correlation {corr:.3f}"],
-                }
-            )
 
-            corr_line = mask_plot.transform_regression("unemployment_rate", chart_value).mark_line(
-                color="black").encode(color=alt.value("black"))
-            row |= mask_plot + corr_line
-        unemployment_vs_mask_plot &= row
+    # Prepare the plot for NOT FREQUENT mask usage
+    infreq_mask_corr = infreq_df["unemployment_rate"].corr(infreq_df["mask_usage"])
+    infreq_mask_plot = alt.Chart(
+        infreq_df,
+        width=400,
+        height=400,
+        title={
+            "text": [""],
+            "subtitle": [f"Pearson correlation {infreq_mask_corr:.3f}"],
+        }
+    ).mark_point(filled=True, size=30).encode(
+        color=alt.Color(
+            "party:N",
+            scale=alt.Scale(domain=party_domain, range=party_range),
+            title="Party",
+            legend=None)
+    ).encode(
+        y=alt.Y(
+            "mask_usage:Q",
+            title=f"Percentage of people saying they do 'not frequently' wear a mask"
+        ),
+        x=alt.X(
+            "unemployment_rate:Q",
+            title="Unemployment Rate",
+            scale=alt.Scale(domain=unemployment_domain))
+    )
 
-    unemployment_vs_mask_plot = unemployment_vs_mask_plot.properties(
+
+    #corr_line = mask_plot.transform_regression("unemployment_rate", chart_value).mark_line(
+    #    color="black").encode(color=alt.value("black"))
+    #unemployment_vs_mask_plot |= mask_plot + corr_line
+
+    unemployment_vs_mask_plot = alt.hconcat(freq_mask_plot, infreq_mask_plot).properties(
         title="Correlation between mask usage and unemployment rate in July 2020"
     ).configure_title(
-                align="left",
-                anchor="start"
-            )
+        align="left",
+        anchor="start"
+    )
 
     return unemployment_vs_mask_plot
 
@@ -242,8 +286,7 @@ def createUnemploymentVaccineChart(df:pd.DataFrame() = None):
             "text": [
                 "Correlation, per month, between percentage of people with at least 1 vaccine dose and unemployment rate"
             ],
-            "subtitle": ["Move the month slider at the bottom (12 = January 2021)",
-                         "The black line shows a linear regression model of percentage of vaccinated people according to unemployment rate",],
+            "subtitle": ["Move the month slider at the bottom (12 = January 2021)",],
         }
     ).transform_filter(alt.datum.percent_with_1_dose > 0).mark_point(filled=True, size=30).encode(
         x=alt.X(
@@ -262,15 +305,18 @@ def createUnemploymentVaccineChart(df:pd.DataFrame() = None):
                         title="Party", legend=None)
     )
 
-    # final_chart=unemployment_vs_vaccine_plot.add_selection(month_selector).transform_filter(month_selector)
-    final_chart=(unemployment_vs_vaccine_plot + unemployment_vs_vaccine_plot.transform_regression(
-        "unemployment_rate",
-        "percent_with_1_dose"
-    ).mark_line(
-        color="black").encode(color=alt.value("black"))).add_selection(
-        month_selector
-    ).transform_filter(month_selector).configure_title(
+    final_chart=unemployment_vs_vaccine_plot.add_selection(month_selector).transform_filter(month_selector).configure_title(
         align="left",
         anchor="start"
     )
+    #final_chart=(unemployment_vs_vaccine_plot + unemployment_vs_vaccine_plot.transform_regression(
+    #    "unemployment_rate",
+    #    "percent_with_1_dose"
+    #).mark_line(
+    #    color="black").encode(color=alt.value("black"))).add_selection(
+    #    month_selector
+    #).transform_filter(month_selector).configure_title(
+    #    align="left",
+    #    anchor="start"
+    #)
     return final_chart
