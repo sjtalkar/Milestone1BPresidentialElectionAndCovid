@@ -42,7 +42,7 @@ def createStateVaccinationChart():
             source,
             title=[
                 "Percentage of state’s population age 18 and older that has received",
-                "at least one dose of a COVID-19 vaccine as of June 26th",
+                "at least one dose of a COVID-19 vaccine as of September 4th",
             ],
         )
         .mark_point(filled=True, opacity=1,)
@@ -180,7 +180,7 @@ def createDailyInteractiveVaccinationChart(df:pd.DataFrame() = None):
             df,
             title=[
                 "Percentage of state’s population age 18 and older that has received",
-                "at least one dose of a COVID-19 vaccine as of June 26th, 2021",
+                "at least one dose of a COVID-19 vaccine as of September 4th, 2021",
             ],
         )
         .mark_point(filled=True, opacity=1,)
@@ -327,7 +327,7 @@ def plotStateVaccinePct(df, date_in):
                     "In Relation to Vaccination Adoption Rates in the States",
                 ],
                 "subtitle": [
-                    "State Level Vaccination Percent Per Population (one dose) as of June 21st, 2021",
+                    "State Level Vaccination Percent Per Population (one dose) as of September 4th, 2021",
                     "Hover and click on State for Covid Case Timeseries",
                 ],
             },
@@ -726,3 +726,59 @@ def createCombinedVaccinationAndDeltaVariantTrend(state_vaccine_df:pd.DataFrame(
         delta_rect_area,
     )
 
+################################################################################
+
+import altair as alt
+from vega_datasets import data
+
+
+def altairTestFunction():
+    source = data.population.url
+
+    slider = alt.binding_range(min=1850, max=2000, step=10)
+    select_year = alt.selection_single(
+        name="year", fields=["year"], bind=slider, init={"year": 2000}
+    )
+
+    base = (
+        alt.Chart(source)
+        .add_selection(select_year)
+        .transform_filter(select_year)
+        .transform_calculate(gender=alt.expr.if_(alt.datum.sex == 1, "Male", "Female"))
+        .properties(width=250)
+    )
+
+    color_scale = alt.Scale(domain=["Male", "Female"], range=["#1f77b4", "#e377c2"])
+
+    left = (
+        base.transform_filter(alt.datum.gender == "Female")
+        .encode(
+            y=alt.Y("age:O", axis=None),
+            x=alt.X(
+                "sum(people):Q", title="population", sort=alt.SortOrder("descending")
+            ),
+            color=alt.Color("gender:N", scale=color_scale, legend=None),
+        )
+        .mark_bar()
+        .properties(title="Female")
+    )
+
+    middle = (
+        base.encode(y=alt.Y("age:O", axis=None), text=alt.Text("age:Q"),)
+        .mark_text()
+        .properties(width=20)
+    )
+
+    right = (
+        base.transform_filter(alt.datum.gender == "Male")
+        .encode(
+            y=alt.Y("age:O", axis=None),
+            x=alt.X("sum(people):Q", title="population"),
+            color=alt.Color("gender:N", scale=color_scale, legend=None),
+        )
+        .mark_bar()
+        .properties(title="Male")
+    )
+
+    altair_test_chart = alt.concat(left, middle, right, spacing=5)
+    return altair_test_chart
