@@ -153,6 +153,9 @@ def getBaseChart(case_rolling_df, date_range):
             ),
         )
         .properties(width=600, height=400)
+    ).configure_title(
+        align="left",
+        anchor="start"
     )
     return base
 

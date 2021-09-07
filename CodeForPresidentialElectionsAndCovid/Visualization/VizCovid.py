@@ -67,6 +67,9 @@ def createPercentPointChangeAvgDeathsChart(df:pd.DataFrame() = None):
         )
         .properties(height=300, width=800)
         .add_selection(selection)
+    ).configure_title(
+        align="left",
+        anchor="start"
     )
 
     mark_more_deaths_line1 = (
