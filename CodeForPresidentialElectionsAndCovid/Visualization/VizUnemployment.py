@@ -4,7 +4,8 @@ import sys
 
 sys.path.append("../ETL")
 from ETL.EtlBase import segment_color_dict
-from ETL.EtlUnemployment import (getUnemploymentRate,
+from ETL.EtlUnemployment import (getUnemploymentCovidBase,
+                                 getUnemploymentCovidCorrelationPerMonth,
                                  getUnemploymentRateSince122019,
                                  getJuly2020UnemploymentAndMask,
                                  getUnemploymentAndVaccine)
@@ -73,7 +74,7 @@ def createUnemploymentChart(df:pd.DataFrame() = None):
 
 def createUnemploymentCovidCasesChart(df:pd.DataFrame()=None):
     if df is None:
-        df = getUnemploymentRate("county")
+        df = getUnemploymentCovidBase("county")
         df.dropna(inplace=True)
         df.drop(columns=["month"], inplace=True)
     # Get a matrix of the covid cases/unemployment correlation per month
@@ -122,15 +123,6 @@ def createUnemploymentCovidCasesChart(df:pd.DataFrame()=None):
                         title="Party", legend=None)
     )
 
-    unemployment_vs_covid_corr = alt.Chart(df).mark_text(
-        align='left', baseline='bottom', dx=+5, dy=-5, fontSize=12,
-    ).encode(
-        x=alt.value(df["correlation"].max()),
-        text="_label:N",
-    ).transform_calculate(
-        _label='"Pearson correlation = " + format(datum.x, ".2f")',
-    )
-
     #final_chart=(unemployment_vs_covid_plot + unemployment_vs_covid_plot.transform_regression(
     #    "unemployment_rate",
     #    "cases_avg_per_100k"
@@ -140,7 +132,79 @@ def createUnemploymentCovidCasesChart(df:pd.DataFrame()=None):
     #    align="left",
     #    anchor="start"
     #)
-    final_chart=(unemployment_vs_covid_plot+unemployment_vs_covid_corr).add_selection(month_selector).transform_filter(month_selector).configure_title(
+    final_chart=(unemployment_vs_covid_plot).add_selection(month_selector).transform_filter(month_selector).configure_title(
+        align="left",
+        anchor="start"
+    )
+    return final_chart
+
+
+def createUnemploymentCovidCasesLineChart(df:pd.DataFrame()=None):
+    if df is None:
+        df = getUnemploymentCovidCorrelationPerMonth("county")
+    unemployment_domain = [0, int(df["unemployment_rate"].max() / 10 + 1) * 10]
+    covid_domain = [0, int(df["cases_avg_per_100k"].max() / 1000 + 1) * 1000]
+    color_scale = alt.Scale(domain=["unemployment rate", "average Covid cases per 100k"], range=["#072F5F", "#B3D3F9"])
+
+    final_chart = alt.vconcat()
+    # Plot the Unemployment and Covid cases rates lines
+    row1 = alt.hconcat()
+    for party in ["DEMOCRAT", "REPUBLICAN"]:
+        base = alt.Chart(df[df["party"] == party],
+                         width=550,
+                         height=300,
+                         title=f"Average Unemployment Rate and Covid-19 Cases in {party} counties"
+                         ).mark_line().encode(
+            x=alt.X(
+                "month",
+                axis=alt.Axis(
+                    title=None,
+                    labelAngle=-45,
+                ),
+            )
+        )
+        unemployment_line = base.mark_line().encode(
+            y=alt.Y(
+                "unemployment_rate:Q",
+                title="Average Unemployment Rate",
+                scale=alt.Scale(domain=unemployment_domain)
+            ),
+            color=alt.Color("unemployment_color", scale=color_scale, title="")
+        )
+        covid_cases_line = base.mark_line().encode(
+            y=alt.Y(
+                "cases_avg_per_100k:Q",
+                title="Average Covid Cases",
+                scale=alt.Scale(domain=covid_domain)
+            ),
+            color=alt.Color("covid_color", scale=color_scale, title="")
+        )
+        row1 |= alt.layer(unemployment_line, covid_cases_line).resolve_scale(y="independent")
+    final_chart &= row1
+    # Plot the correlation line
+    row2 = alt.hconcat()
+    for party in ["DEMOCRAT", "REPUBLICAN"]:
+        correlation_line = alt.Chart(df[df["party"] == party],
+                                     width=550,
+                                     height=300,
+                                     title=f"Correlation Between Unemployment Rate and Covid-19 Cases in {party} counties"
+                                     ).mark_line(color="#5D81AC").encode(
+            x=alt.X(
+                "month",
+                axis=alt.Axis(
+                    title=None,
+                    labelAngle=-45,
+                ),
+            ),
+            y=alt.Y(
+                "correlation:Q",
+                title="Correlation",
+                scale=alt.Scale(domain=[-0.4, 0.4])
+            )
+        )
+        row2 |= correlation_line
+    final_chart &= row2
+    final_chart=final_chart.configure_title(
         align="left",
         anchor="start"
     )
@@ -148,7 +212,7 @@ def createUnemploymentCovidCasesChart(df:pd.DataFrame()=None):
 
 def createUnemploymentCovidDeathChart(df:pd.DataFrame() = None):
     if df is None:
-        df = getUnemploymentRate("county")
+        df = getUnemploymentCovidBase("county")
         df.dropna(inplace=True)
         df.drop(columns=["month"], inplace=True)
     unemployment_domain = [0, int(df["unemployment_rate"].max() / 10 + 1) * 10]
@@ -194,7 +258,7 @@ def createUnemploymentCovidDeathChart(df:pd.DataFrame() = None):
 
 def createUnemploymentMaskChart(freq_df:pd.DataFrame() = None, infreq_df:pd.DataFrame() = None):
     if (freq_df is None) or (infreq_df is None):
-        freq_df, infreq_df = getJuly2020UnemploymentAndMask("county", getUnemploymentRate("county"))
+        freq_df, infreq_df = getJuly2020UnemploymentAndMask("county", getUnemploymentCovidBase("county"))
 
     unemployment_domain = [0, max(
         int(freq_df["unemployment_rate"].max() / 10 + 1) * 10,
@@ -272,7 +336,7 @@ def createUnemploymentMaskChart(freq_df:pd.DataFrame() = None, infreq_df:pd.Data
 
 def createUnemploymentVaccineChart(df:pd.DataFrame() = None):
     if df is None:
-        df = getUnemploymentAndVaccine(unemployment_covid_df=getUnemploymentRate("county"))
+        df = getUnemploymentAndVaccine(unemployment_covid_df=getUnemploymentCovidBase("county"))
     unemployment_domain = [0, int(df["unemployment_rate"].max() / 5 + 1) * 5]
     # Create the slider for the month
     month_selector = createMonthSlider(df=df,
