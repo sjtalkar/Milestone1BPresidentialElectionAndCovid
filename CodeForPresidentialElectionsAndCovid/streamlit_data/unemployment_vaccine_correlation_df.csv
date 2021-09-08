@@ -23,54 +23,30 @@ month,party,variable,value
 2021-07,DEMOCRAT,Average Unemployment Rate,6.013904761904761
 2021-07,OTHER,Average Unemployment Rate,3.2846153846153845
 2021-07,REPUBLICAN,Average Unemployment Rate,4.476970873786408
-2020-12,DEMOCRAT,"Average Percentage of People
- with 1 Dose of Vaccine",0.03447619047619047
-2020-12,OTHER,"Average Percentage of People
- with 1 Dose of Vaccine",0.0
-2020-12,REPUBLICAN,"Average Percentage of People
- with 1 Dose of Vaccine",0.0037267080745341614
-2021-01,DEMOCRAT,"Average Percentage of People
- with 1 Dose of Vaccine",5.684190476190473
-2021-01,OTHER,"Average Percentage of People
- with 1 Dose of Vaccine",5.323076923076924
-2021-01,REPUBLICAN,"Average Percentage of People
- with 1 Dose of Vaccine",5.374145962732907
-2021-02,DEMOCRAT,"Average Percentage of People
- with 1 Dose of Vaccine",12.158857142857135
-2021-02,OTHER,"Average Percentage of People
- with 1 Dose of Vaccine",11.546153846153846
-2021-02,REPUBLICAN,"Average Percentage of People
- with 1 Dose of Vaccine",12.038897515527955
-2021-03,DEMOCRAT,"Average Percentage of People
- with 1 Dose of Vaccine",24.185333333333336
-2021-03,OTHER,"Average Percentage of People
- with 1 Dose of Vaccine",24.315384615384612
-2021-03,REPUBLICAN,"Average Percentage of People
- with 1 Dose of Vaccine",21.15209627329192
-2021-04,DEMOCRAT,"Average Percentage of People
- with 1 Dose of Vaccine",35.275428571428556
-2021-04,OTHER,"Average Percentage of People
- with 1 Dose of Vaccine",38.89230769230768
-2021-04,REPUBLICAN,"Average Percentage of People
- with 1 Dose of Vaccine",27.20524068322976
-2021-05,DEMOCRAT,"Average Percentage of People
- with 1 Dose of Vaccine",40.875809523809494
-2021-05,OTHER,"Average Percentage of People
- with 1 Dose of Vaccine",50.60769230769232
-2021-05,REPUBLICAN,"Average Percentage of People
- with 1 Dose of Vaccine",29.521739130434696
-2021-06,DEMOCRAT,"Average Percentage of People
- with 1 Dose of Vaccine",43.54857142857141
-2021-06,OTHER,"Average Percentage of People
- with 1 Dose of Vaccine",53.35384615384615
-2021-06,REPUBLICAN,"Average Percentage of People
- with 1 Dose of Vaccine",30.81335403726708
-2021-07,DEMOCRAT,"Average Percentage of People
- with 1 Dose of Vaccine",45.59828571428572
-2021-07,OTHER,"Average Percentage of People
- with 1 Dose of Vaccine",54.67692307692308
-2021-07,REPUBLICAN,"Average Percentage of People
- with 1 Dose of Vaccine",32.55234951456313
+2020-12,DEMOCRAT,Average % of People with 1 Dose of Vaccine,0.03447619047619047
+2020-12,OTHER,Average % of People with 1 Dose of Vaccine,0.0
+2020-12,REPUBLICAN,Average % of People with 1 Dose of Vaccine,0.0037267080745341614
+2021-01,DEMOCRAT,Average % of People with 1 Dose of Vaccine,5.684190476190473
+2021-01,OTHER,Average % of People with 1 Dose of Vaccine,5.323076923076924
+2021-01,REPUBLICAN,Average % of People with 1 Dose of Vaccine,5.374145962732907
+2021-02,DEMOCRAT,Average % of People with 1 Dose of Vaccine,12.158857142857135
+2021-02,OTHER,Average % of People with 1 Dose of Vaccine,11.546153846153846
+2021-02,REPUBLICAN,Average % of People with 1 Dose of Vaccine,12.038897515527955
+2021-03,DEMOCRAT,Average % of People with 1 Dose of Vaccine,24.185333333333336
+2021-03,OTHER,Average % of People with 1 Dose of Vaccine,24.315384615384612
+2021-03,REPUBLICAN,Average % of People with 1 Dose of Vaccine,21.15209627329192
+2021-04,DEMOCRAT,Average % of People with 1 Dose of Vaccine,35.275428571428556
+2021-04,OTHER,Average % of People with 1 Dose of Vaccine,38.89230769230768
+2021-04,REPUBLICAN,Average % of People with 1 Dose of Vaccine,27.20524068322976
+2021-05,DEMOCRAT,Average % of People with 1 Dose of Vaccine,40.875809523809494
+2021-05,OTHER,Average % of People with 1 Dose of Vaccine,50.60769230769232
+2021-05,REPUBLICAN,Average % of People with 1 Dose of Vaccine,29.521739130434696
+2021-06,DEMOCRAT,Average % of People with 1 Dose of Vaccine,43.54857142857141
+2021-06,OTHER,Average % of People with 1 Dose of Vaccine,53.35384615384615
+2021-06,REPUBLICAN,Average % of People with 1 Dose of Vaccine,30.81335403726708
+2021-07,DEMOCRAT,Average % of People with 1 Dose of Vaccine,45.59828571428572
+2021-07,OTHER,Average % of People with 1 Dose of Vaccine,54.67692307692308
+2021-07,REPUBLICAN,Average % of People with 1 Dose of Vaccine,32.55234951456313
 2020-12,DEMOCRAT,Correlation,-0.07154723392791568
 2020-12,OTHER,Correlation,
 2020-12,REPUBLICAN,Correlation,-0.04341216683658499

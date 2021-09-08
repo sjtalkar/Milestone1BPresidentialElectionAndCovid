@@ -76,7 +76,7 @@ def createUnemploymentChart(df:pd.DataFrame() = None):
     return unemployment_chart
 
 
-def createUnemploymentCorrelationLineChart(df:pd.DataFrame()=None, title:str=None):
+def createUnemploymentCorrelationLineChart(df:pd.DataFrame()=None, title:str=None, sort:list=[]):
     if df is None:
         df = getUnemploymentCovidCorrelationPerMonth()
 
@@ -131,10 +131,11 @@ def createUnemploymentCorrelationLineChart(df:pd.DataFrame()=None, title:str=Non
     final_chart = alt.layer(lines, selectors, points, text, rules).facet(
         row=alt.Row(
             "variable:N",
-            sort=["unemployment_rate", "cases_avg_per_100k", "correlation"],
+            sort=sort,
             title=None,
             header=alt.Header(labels=True)
         ),
+        spacing=50,
         title=title,
         data=df
     ).resolve_scale(

@@ -312,7 +312,7 @@ def getUnemploymentVaccineCorrelationPerMonth(df=None):
     # Rename column names and Melt for Altair
     unemployment_vaccine_df.rename(
         columns={"unemployment_rate": "Average Unemployment Rate",
-                 "percent_with_1_dose": "Average Percentage of People\n with 1 Dose of Vaccine",
+                 "percent_with_1_dose": "Average % of People with 1 Dose of Vaccine",
                  "correlation": "Correlation"},
         inplace=True)
     unemployment_vaccine_df = unemployment_vaccine_df.melt(
@@ -320,7 +320,7 @@ def getUnemploymentVaccineCorrelationPerMonth(df=None):
             "month",
             "party",
         ],
-        value_vars=["Average Unemployment Rate", "Average Percentage of People\n with 1 Dose of Vaccine",
+        value_vars=["Average Unemployment Rate", "Average % of People with 1 Dose of Vaccine",
                     "Correlation"],
         col_level=None,
         ignore_index=True,
