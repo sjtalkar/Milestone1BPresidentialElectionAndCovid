@@ -12,7 +12,7 @@ from ETL.EtlUnemployment import (getUnemploymentRateSince122019,
                                 getUnemploymentCovidBase,
                                 getUnemploymentCovidCorrelationPerMonth,
                                 getJuly2020UnemploymentAndMask,
-                                getUnemploymentAndVaccine)
+                                getUnemploymentVaccineCorrelationPerMonth)
 #
 # This script runs all the functions used to processed all the datasets used in the different visualizaionts
 # It then saves all those processed datasets in files to be used in Streamlit. This is done to speed-up the loading time
@@ -54,19 +54,19 @@ if __name__ == '__main__':
     unemployment_rate_since_2019_df.to_csv(path_or_buf="./streamlit_data/unemployment_rate_since_2019_df.csv",
                                            index=False)
 
-    unemployment_covid_df = getUnemploymentCovidBase("county")
+    unemployment_covid_df = getUnemploymentCovidBase()
     unemployment_covid_df.to_csv(path_or_buf="./streamlit_data/unemployment_covid_df.csv", index=False)
 
-    unemployment_covid_correlation_df = getUnemploymentCovidCorrelationPerMonth("county", unemployment_covid_df)
+    unemployment_covid_correlation_df = getUnemploymentCovidCorrelationPerMonth(unemployment_covid_df)
     unemployment_covid_correlation_df.to_csv(path_or_buf="./streamlit_data/unemployment_covid_correlation_df.csv",
                                              index=False)
 
     unemployment_freq_mask_july_df, unemployment_infreq_mask_july_df = getJuly2020UnemploymentAndMask(
-        "county", unemployment_covid_df)
+        unemployment_covid_df)
     unemployment_freq_mask_july_df.to_csv(path_or_buf="./streamlit_data/unemployment_freq_mask_july_df.csv",
                                           index=False)
     unemployment_infreq_mask_july_df.to_csv(path_or_buf="./streamlit_data/unemployment_infreq_mask_july_df.csv",
                                           index=False)
 
-    unemployment_and_vaccine_df = getUnemploymentAndVaccine(unemployment_covid_df=unemployment_covid_df)
-    unemployment_and_vaccine_df.to_csv(path_or_buf="./streamlit_data/unemployment_and_vaccine_df.csv", index=False)
+    unemployment_vaccine_correlation_df = getUnemploymentVaccineCorrelationPerMonth(df=unemployment_rate_since_2019_df)
+    unemployment_vaccine_correlation_df.to_csv(path_or_buf="./streamlit_data/unemployment_vaccine_correlation_df.csv", index=False)

@@ -71,7 +71,7 @@ def get_unemployment_rates_from_api(apy_key):
 ##########################################################################################
 # Get the pre-pandemic December 2019 data
 ##########################################################################################
-def getUnemploymentRateSince122019(level="county"):
+def getUnemploymentRateSince122019():
     #
     # Prepare unemployment Data
     # 
@@ -93,29 +93,19 @@ def getUnemploymentRateSince122019(level="county"):
     unemployment_df["month_since_start"] = unemployment_df["month"].apply(calculate_month_since_start)
     unemployment_df["unemployment_rate"] = unemployment_df["unemployment_rate"].astype("float64")
     #
-    # Merge election data at the state or county level
+    # Merge election data at the county level
     #
-    if level == "state":
-        unemployment_df.drop(columns=["county_fips", "LAUS_code","year","month","footnotes"], inplace=True)
-        unemployment_df = unemployment_df.groupby(["month", "state_fips"]).agg({
-            "unemployment_rate": lambda x : x.mean()})
-        unemployment_df.reset_index(inplace=True)
-        election_df = getStateLevelElectionData2020()
-        election_df = election_df[["state_po", "party_simplified"]]
-        election_df.rename(columns={"state_po": "state", "party_simplified": "party"}, inplace = True)
-        unemployment_df = pd.merge(unemployment_df, election_df, how="left", on="state_fips" )
-    else:
-        unemployment_df.drop(columns=["state_fips", "county_fips", "LAUS_code","year","month","footnotes"], inplace=True)
-        election_df = getElectionData()
-        election_df = election_df[["COUNTYFP", "party_winner_2020"]]
-        election_df.rename(columns={"party_winner_2020": "party"}, inplace = True)
-        unemployment_df = pd.merge(unemployment_df, election_df, how="left", on="COUNTYFP" )
+    unemployment_df.drop(columns=["state_fips", "county_fips", "LAUS_code","year","footnotes"], inplace=True)
+    election_df = getElectionData()
+    election_df = election_df[["COUNTYFP", "party_winner_2020"]]
+    election_df.rename(columns={"party_winner_2020": "party"}, inplace = True)
+    unemployment_df = pd.merge(unemployment_df, election_df, how="left", on="COUNTYFP" )
     return unemployment_df
 
 ##########################################################################################
 # Merge the unemployment and Covid cases and death data
 ##########################################################################################
-def getUnemploymentCovidBase(level="county"):
+def getUnemploymentCovidBase():
     """
         THIS FUNCTION reads the county level unemployment rate from the 2020 dataset published by the BLS
         and 
@@ -145,8 +135,6 @@ def getUnemploymentCovidBase(level="county"):
     unemployment_df = unemployment_df[unemployment_df["COUNTYFP"] < 57000]
     # Calculate for each record the number of month since the start
     first_month = unemployment_df["month"].min()
-    calculate_month_since_start = lambda x : (x - first_month).n + 1
-    unemployment_df["month_since_start"] = unemployment_df["month"].apply(calculate_month_since_start)
     unemployment_df["unemployment_rate"] = unemployment_df["unemployment_rate"].astype("float64")
     unemployment_df.drop(columns=["state_fips", "county_fips", "LAUS_code","year","footnotes"], inplace=True)
     #
@@ -164,34 +152,22 @@ def getUnemploymentCovidBase(level="county"):
     unemployment_covid_df = pd.merge(unemployment_df, covid_df, how="left", on=["month", "COUNTYFP"])
     
     #
-    # Merge election data at the state or county level
+    # Merge election data at the county level
     #
-    if level == "state":
-        unemployment_covid_df = unemployment_covid_df.groupby(["month", "state"]).agg({
-            "unemployment_rate": lambda x : x.mean(),
-            "cases_avg_per_100k": lambda x : x.sum(),
-            "deaths_avg_per_100k": lambda x : x.sum()
-        })
-        unemployment_covid_df.reset_index(inplace=True)
-        election_df = getStateLevelElectionData2020()
-        election_df = election_df[["state_po", "party_simplified"]]
-        election_df.rename(columns={"state_po": "state", "party_simplified": "party"}, inplace = True)
-        unemployment_covid_df = pd.merge(unemployment_covid_df, election_df, how="left", on="state" )
-    else:
-        election_df = getElectionData()
-        election_df = election_df[["COUNTYFP", "party_winner_2020"]]
-        election_df.rename(columns={"party_winner_2020": "party"}, inplace = True)
-        unemployment_covid_df = pd.merge(unemployment_covid_df, election_df, how="left", on="COUNTYFP" )
+    election_df = getElectionData()
+    election_df = election_df[["COUNTYFP", "party_winner_2020"]]
+    election_df.rename(columns={"party_winner_2020": "party"}, inplace = True)
+    unemployment_covid_df = pd.merge(unemployment_covid_df, election_df, how="left", on="COUNTYFP" )
     return unemployment_covid_df
 
 
-def getUnemploymentCovidCorrelationPerMonth(level="county", df=None):
+def getUnemploymentCovidCorrelationPerMonth(df=None):
     if df is None:
-        unemployment_covid_df = getUnemploymentCovidBase(level)
+        unemployment_covid_df = getUnemploymentCovidBase()
     else:
         unemployment_covid_df = df.copy()
     # Remove useless data for this dataset
-    unemployment_covid_df.drop(columns=["month_since_start", "COUNTYFP", "deaths_avg_per_100k"], inplace=True)
+    unemployment_covid_df.drop(columns=["COUNTYFP", "deaths_avg_per_100k"], inplace=True)
     unemployment_covid_df = unemployment_covid_df[unemployment_covid_df["party"] != "OTHER"]
     # Compute the monthly correlation between cases_avg_per_100k and unemployment_rate
     unemployment_covid_df["month"] = unemployment_covid_df["month"].astype(str)
@@ -204,15 +180,28 @@ def getUnemploymentCovidCorrelationPerMonth(level="county", df=None):
     unemployment_covid_df = unemployment_covid_df.groupby(["month", "party"]).mean()
     unemployment_covid_df.reset_index(inplace=True)
     unemployment_covid_correlation_df = pd.merge(unemployment_covid_df, monthly_correlation_df, how="left", on=["month", "party"])
-    # Add columns for altair color legends
-    unemployment_covid_correlation_df["unemployment_color"] = len(unemployment_covid_correlation_df) * ["unemployment rate"]
-    unemployment_covid_correlation_df["covid_color"] = len(unemployment_covid_correlation_df) * ["average Covid cases per 100k"]
+    # Rename data columns and Melt the dataframe for Altair
+    unemployment_covid_correlation_df.rename(
+        columns={"unemployment_rate": "Average Unemployment Rate", "cases_avg_per_100k": "Average Covid Cases per 100k",
+                 "correlation": "Correlation"},
+        inplace=True)
+    unemployment_covid_correlation_df = unemployment_covid_correlation_df.melt(
+        id_vars=[
+            "month",
+            "party",
+        ],
+        value_vars=["Average Unemployment Rate", "Average Covid Cases per 100k", "Correlation"],
+        col_level=None,
+        ignore_index=True,
+    )
     return unemployment_covid_correlation_df
 
 
-def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
-    if unemployment_covid_df is None:
-        unemployment_covid_df = getUnemploymentCovidBase(level)
+def getJuly2020UnemploymentAndMask(df=None):
+    if df is None:
+        unemployment_covid_df = getUnemploymentCovidBase()
+    else:
+        unemployment_covid_df = df.copy()
     county_mask_df = pd.read_csv( DataFolder / r"mask-use-by-county.csv",index_col=0)
     july_2020 = pd.to_datetime("2020-07", format="%Y-%m").to_period('M')
 
@@ -230,21 +219,6 @@ def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
 
     # Merge the Mask dataset
     unemployment_mask_july_df = pd.merge(unemployment_covid_july_df, county_mask_df, how="left", on="COUNTYFP")
-
-    # If we look at "state" level, aggregate by state
-    if level == "state":
-        unemployment_mask_july_df = unemployment_mask_july_df.groupby(["state"]).agg({
-                "unemployment_rate": lambda x : x.mean(),
-                "cases_avg_per_100k": lambda x : x.sum(),
-                "deaths_avg_per_100k": lambda x : x.sum(),
-                "party": "first",
-                "NEVER": lambda x : x.mean(),
-                "RARELY": lambda x : x.mean(),
-                "SOMETIMES": lambda x : x.mean(),
-                "FREQUENTLY": lambda x : x.mean(),
-                "ALWAYS": lambda x : x.mean()
-            })
-        unemployment_mask_july_df.reset_index(inplace=True)
 
     unemployment_mask_july_df = unemployment_mask_july_df.melt(
         id_vars=[
@@ -291,11 +265,18 @@ def getJuly2020UnemploymentAndMask(level="county", unemployment_covid_df=None):
     return unemployment_freq_mask_july_df, unemployment_infreq_mask_july_df
 
 
-def getUnemploymentAndVaccine(level="county", unemployment_covid_df=None):
-    if unemployment_covid_df is None:
-        unemployment_covid_df = getUnemploymentCovidBase(level)
-    county_vaccine_df = pd.read_csv( DataFolder / r"COVID-19_Vaccinations_in_the_United_States_County.zip", compression="zip")
-    county_vaccine_df = county_vaccine_df[["Date", "FIPS", "Recip_County", "Recip_State","Administered_Dose1_Pop_Pct"]]
+def getUnemploymentVaccineCorrelationPerMonth(df=None):
+    if df is None:
+        unemployment_df = getUnemploymentRateSince122019()
+    else:
+        unemployment_df = df.copy()
+    # Remove data from December 2019 (pre-covid)
+    unemployment_df = unemployment_df[unemployment_df["month_since_start"] != 1]
+    unemployment_df.drop(columns=["month_since_start"], inplace=True)
+
+    county_vaccine_df = pd.read_csv(DataFolder / r"COVID-19_Vaccinations_in_the_United_States_County.zip",
+                                    compression="zip")
+    county_vaccine_df = county_vaccine_df[["Date", "FIPS", "Recip_County", "Recip_State", "Administered_Dose1_Pop_Pct"]]
     county_vaccine_df = county_vaccine_df.rename(
         columns={
             "FIPS": "COUNTYFP",
@@ -311,8 +292,37 @@ def getUnemploymentAndVaccine(level="county", unemployment_covid_df=None):
     county_vaccine_df = county_vaccine_df.groupby(["month", "COUNTYFP"]).max()
     county_vaccine_df.reset_index(inplace=True)
     county_vaccine_df.drop(columns=["Date"], inplace=True)
-    
-    unemployment_vaccine_df = pd.merge(county_vaccine_df, unemployment_covid_df, how="left", on=["month","COUNTYFP"])
+    #Merg unemployment and vaccination
+    unemployment_vaccine_df = pd.merge(county_vaccine_df, unemployment_df, how="left", on=["month", "COUNTYFP"])
+    unemployment_vaccine_df.drop(columns=["COUNTYFP"], inplace=True)
     unemployment_vaccine_df.dropna(inplace=True)
-    unemployment_vaccine_df.drop(columns=["month"], inplace=True)
+    unemployment_vaccine_df["month"] = unemployment_vaccine_df["month"].astype(str)
+    # Compute the monthly correlation between cases_avg_per_100k and unemployment_rate
+    monthly_correlation_df = unemployment_vaccine_df.groupby(["month", "party"])[
+                                 ["percent_with_1_dose", "unemployment_rate"]].corr().iloc[
+                             0::2, -1]
+    monthly_correlation_df = monthly_correlation_df.reset_index()
+    monthly_correlation_df.drop(columns=["level_2"], inplace=True)
+    monthly_correlation_df.rename(columns={"unemployment_rate": "correlation"}, inplace=True)
+    # Merge the two
+    unemployment_vaccine_df = unemployment_vaccine_df.groupby(["month", "party"]).mean()
+    unemployment_vaccine_df.reset_index(inplace=True)
+    unemployment_vaccine_df = pd.merge(unemployment_vaccine_df, monthly_correlation_df, how="left",
+                                       on=["month", "party"])
+    # Rename column names and Melt for Altair
+    unemployment_vaccine_df.rename(
+        columns={"unemployment_rate": "Average Unemployment Rate",
+                 "percent_with_1_dose": "Average Percentage of People\n with 1 Dose of Vaccine",
+                 "correlation": "Correlation"},
+        inplace=True)
+    unemployment_vaccine_df = unemployment_vaccine_df.melt(
+        id_vars=[
+            "month",
+            "party",
+        ],
+        value_vars=["Average Unemployment Rate", "Average Percentage of People\n with 1 Dose of Vaccine",
+                    "Correlation"],
+        col_level=None,
+        ignore_index=True,
+    )
     return unemployment_vaccine_df
