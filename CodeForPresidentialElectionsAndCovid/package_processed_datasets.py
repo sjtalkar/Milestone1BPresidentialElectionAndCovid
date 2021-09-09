@@ -13,6 +13,7 @@ from ETL.EtlUnemployment import (getUnemploymentRateSince122019,
                                 getUnemploymentCovidCorrelationPerMonth,
                                 getJuly2020UnemploymentAndMask,
                                 getUnemploymentVaccineCorrelationPerMonth)
+from ETL.EtlUrbanRural import (MergeElectionUrbanRural)
 #
 # This script runs all the functions used to processed all the datasets used in the different visualizaionts
 # It then saves all those processed datasets in files to be used in Streamlit. This is done to speed-up the loading time
@@ -50,6 +51,10 @@ if __name__ == '__main__':
     county_pop_mask_freq_df.to_csv(path_or_buf ="./streamlit_data/county_pop_mask_freq_df.csv", index=False)
     county_pop_mask_infreq_df.to_csv(path_or_buf ="./streamlit_data/county_pop_mask_infreq_df.csv", index=False)
 
+    #
+    # Package unemployments dataframse
+    #
+
     unemployment_rate_since_2019_df = getUnemploymentRateSince122019()
     unemployment_rate_since_2019_df.to_csv(path_or_buf="./streamlit_data/unemployment_rate_since_2019_df.csv",
                                            index=False)
@@ -69,4 +74,12 @@ if __name__ == '__main__':
                                           index=False)
 
     unemployment_vaccine_correlation_df = getUnemploymentVaccineCorrelationPerMonth(df=unemployment_rate_since_2019_df)
-    unemployment_vaccine_correlation_df.to_csv(path_or_buf="./streamlit_data/unemployment_vaccine_correlation_df.csv", index=False)
+    unemployment_vaccine_correlation_df.to_csv(path_or_buf="./streamlit_data/unemployment_vaccine_correlation_df.csv",
+                                               index=False)
+
+    #
+    # Package urban/rural dataframse
+    #
+    election_urban_rural_df = MergeElectionUrbanRural()
+    election_urban_rural_df.to_csv(path_or_buf="./streamlit_data/election_urban_rural_df.csv",
+                                               index=False)

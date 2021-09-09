@@ -10,7 +10,7 @@ from ETL.EtlUrbanRural import *
 
 #######################################################################################################
 
-def ElectionUrbanRuralDensityPlot():
+def ElectionUrbanRuralDensityPlot(PEUrbanRuralDF:pd.DataFrame()=None):
     '''
     Plots the urban/rural designation of the counties merged with the county-level
         presidential election results as a density plot
@@ -25,7 +25,8 @@ def ElectionUrbanRuralDensityPlot():
     party_domain = ["DEMOCRAT", "REPUBLICAN"]
     party_range = ["#030D97", "#970D03"]
 
-    PEUrbanRuralDF = MergeElectionUrbanRural()
+    if PEUrbanRuralDF is None:
+        PEUrbanRuralDF = MergeElectionUrbanRural()
     
     PctRuralDomain = [0, int(PEUrbanRuralDF["PctRural"].max() / 10) * 10]
 
@@ -59,7 +60,7 @@ def ElectionUrbanRuralDensityPlot():
 
 #######################################################################################################
 
-def UrbanRuralCorrelation():  
+def UrbanRuralCorrelation(PEUrbanRuralDF:pd.DataFrame()=None):
     '''
     Plots the "percent rural" of counties vs fraction of the vote
         for the winning party, a separate chart for each party
@@ -76,8 +77,9 @@ def UrbanRuralCorrelation():
     party_range = ["#030D97", "#970D03"]
     
     # Get the data and split into democrat and republican
+    if PEUrbanRuralDF is None:
+        PEUrbanRuralDF = MergeElectionUrbanRural()
 
-    PEUrbanRuralDF = MergeElectionUrbanRural()
         
     PEUrbanRuralDF2 = PEUrbanRuralDF.copy()
     PEUrbanRuralDF2['fractionvotes'] = PEUrbanRuralDF2['candidatevotes'] / PEUrbanRuralDF2['totalvotes']
