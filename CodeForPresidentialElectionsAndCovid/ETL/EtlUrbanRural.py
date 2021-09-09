@@ -18,6 +18,7 @@ def GetCountyUrbanRuralData():
         PctRural: Percentage of "how rural" a county is according to the census
     
     Called by: MergeElectionUrbanRural()
+               CountyElecUrbanRuralSplit()
     Functions called: None
     '''
 
@@ -48,7 +49,7 @@ def GetCountyUrbanRuralData():
 
 def GetCountyElectionData():
     '''
-    Reads in an csv file with county-level presidential election results.
+    Reads in a CSV file with county-level presidential election results.
     Returns a dataframe for 2020 results with the following columns:
         state_po: State two-letter abbreviation
         county_name: Full county name
@@ -127,5 +128,51 @@ def MergeElectionUrbanRural():
     ElecUrbanRuralDF = CountyElecDF.merge(UrbanRuralDF, on='county_fips', how='inner')
     
     return ElecUrbanRuralDF
+
+#########################################################################################################
+
+def CountyElecUrbanRuralSplit():
+    '''
+    Reads in a CSV file with county-level presidential election results.
+    Merges the data with the urban/rural designations of the counties.
+    Splits the data by designation and writes out to two CSV files with
+    the following columns:
+        year: Election year
+        state: Full state name
+        state_po: State two-letter abbreviation
+        county_name: Full county name
+        county_fips: The FIPS number of a county
+        office: PRESIDENT since this is for presidential elections only
+        candidate: Winning candidate name
+        party: Winning candidate's party
+        candidatevotes: Number of votes for the winning candidate
+        totalvotes: Total votes cast in the county
+        version: [Relevant to data collection]
+        mode: [Relevant to data collection]
+        Urban/Rural: String designating a county as "urban" or "rural"
+        PctRural: Percentage of "how rural" a county is according to the census
+    Returns: None
+
+    Called by: Main code
+    Functions called: GetCountyUrbanRuralData()
+    '''
+    
+    # Get full election results data once again.
+    CountyPresDF = pd.read_csv(DataFolder / 'countypres_2000-2020.csv')
+    
+    # Get the urban/rural designation of each county
+    CountyUrbanRural = GetCountyUrbanRuralData()
+    
+    # Merge the two to allow filtering by designation.
+    CountyPresFull = CountyPresDF.merge(CountyUrbanRural, on='county_fips', how='inner')
+    
+    # Split in to urban and rural, and write each to a separate file
+    CountyPresFullUrban = CountyPresFull[CountyPresFull['UrbanRural']=='urban']
+    CountyPresFullUrban.to_csv(DataFolder / 'CountyPresFullUrban', index=False)
+    
+    CountyPresFullRural = CountyPresFull[CountyPresFull['UrbanRural']=='rural']
+    CountyPresFullRural.to_csv(DataFolder / 'CountyPresFullRural', index=False)
+    
+    return
 
 #########################################################################################################
