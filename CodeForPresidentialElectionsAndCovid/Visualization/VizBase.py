@@ -1,6 +1,7 @@
 import altair as alt
-import plotly.io as plt_io
+
 import sys
+
 from vega_datasets import data
 
 sys.path.append("../ETL")
@@ -38,7 +39,7 @@ def createCovidConfirmedTimeseriesChart(case_rolling_df):
 
     make_selector = (
         alt.Chart(case_rolling_df)
-        .mark_rect()
+        .mark_circle()
         .encode(
             y=alt.Y(
                 "segmentname:N",
@@ -54,7 +55,7 @@ def createCovidConfirmedTimeseriesChart(case_rolling_df):
     base = getBaseChart(case_rolling_df, ["2020-01-01", "2020-12-31"])
 
     highlight_segment = (
-        base.mark_line()
+        base.mark_line(strokeWidth=1)
         .add_selection(radio_select)
         .encode(
             color=change_color_condition,
@@ -65,7 +66,7 @@ def createCovidConfirmedTimeseriesChart(case_rolling_df):
                 alt.value([0]),  # solid line
             ),
         )
-    )
+    ).properties(height=200)
 
     return base, make_selector, highlight_segment, radio_select
 
@@ -152,7 +153,7 @@ def getBaseChart(case_rolling_df, date_range):
                 axis=alt.Axis(title="Cases (rolling mean per 100K)"),
             ),
         )
-        .properties(width=600, height=400)
+        #.properties(width=600, height=400)
     )
     return base
 
@@ -193,20 +194,13 @@ def createTooltip(base, radio_select, case_rolling_df):
 
     # Draw text labels near the points, and highlight based on selection
     tooltip_text = (
-        base.mark_text(
-            align="left",
-            dx=-60,
-            dy=-15,
-            fontSize=15,
-            # fontWeight="bold",
-            lineBreak="\n",
-        )
-        .encode(
+        base.mark_text(align="left", dx=-60, dy=-15, fontSize=10, lineBreak="\n", )
+            .encode(
             text=alt.condition(
                 nearest, alt.Text("cases_avg_per_100k:Q", format=".2f"), alt.value(" "),
             ),
         )
-        .transform_filter(radio_select)
+            .transform_filter(radio_select)
     )
 
     # Draw a rule at the location of the selection
@@ -218,16 +212,3 @@ def createTooltip(base, radio_select, case_rolling_df):
     )
     return selectors, rules, points, tooltip_text
 
-
-###########################################################################################
-def createWhiteTheme():
-    # back_colors = {"superdark-blue": "rgb(31,38,42)"}
-    back_colors = {"white": "rgb(255,255, 255)"}
-
-    # create our custom_dark theme from the plotly_dark template
-    plt_io.templates["custom_dark"] = plt_io.templates["presentation"]
-
-    return
-
-
-createWhiteTheme()

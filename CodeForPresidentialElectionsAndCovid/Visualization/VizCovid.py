@@ -15,7 +15,6 @@ alt.data_transformers.disable_max_rows()
 
 
 def createPercentPointChangeAvgDeathsChart(df:pd.DataFrame() = None):
-
     """
       THIS FUNCTION showing average COVID deaths versus percent change for each political affiliation.
       
@@ -50,12 +49,12 @@ def createPercentPointChangeAvgDeathsChart(df:pd.DataFrame() = None):
         .encode(
             x=alt.X("pct_increase:Q", title="Percent point change"),
             y=alt.Y("deaths_avg_per_100k:Q", title="Average deaths per 100K"),
-            # color=alt.Color("changecolor:N", scale=None),
             color=alt.condition(
                 selection,
                 alt.Color("changecolor:N", scale=None, legend=None),
-                alt.value("lightgray"),
+                alt.value("#EDEDED"),
             ),
+            opacity=alt.condition(selection, alt.value(1), alt.value(0.1)),
             # size= alt.Size("totalvotes_2020:Q", scale=alt.Scale(domain=[100,20000]) , legend=None),
             tooltip=[
                 alt.Tooltip("CTYNAME:N", title="County Name:"),
@@ -123,7 +122,7 @@ def createSankeyForAffilitionChange():
         label_idx_dict[label] = idx
 
     label_list = [
-        f"Voted {label.split( '_')[0].capitalize()} in {label.split( '_')[1]}"
+        f"Voted {label.split('_')[0].capitalize()} in {label.split('_')[1]}"
         for label in label_list
     ]
 
