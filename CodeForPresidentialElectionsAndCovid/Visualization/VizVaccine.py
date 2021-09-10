@@ -61,7 +61,7 @@ def createStateVaccinationChart():
             color=alt.Color(
                 "party_simplified:N",
                 scale=alt.Scale(
-                    domain=["DEMOCRAT", "REPUBLICAN"], range=["#237ABD", "#CD2128"]
+                    domain=["DEMOCRAT", "REPUBLICAN"], range=["#030D97", "#970D03"]
                 ),
             ),
             tooltip=[alt.Tooltip("state_po:N", title="State: ")],
@@ -110,7 +110,7 @@ def createStateVaccinationChart():
                 "party_simplified:N",
                 legend=alt.Legend(title="Presidential election choice"),
                 scale=alt.Scale(
-                    domain=["DEMOCRAT", "REPUBLICAN"], range=["#237ABD", "#CD2128"]
+                    domain=["DEMOCRAT", "REPUBLICAN"], range=["#030D97", "#970D03"]
                 ),
             ),
             size=alt.Size(

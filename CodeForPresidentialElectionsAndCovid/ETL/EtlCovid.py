@@ -138,7 +138,8 @@ def getCasesRollingAveragePer100K():
 
 
 ########################################################################################
-def getPercentilePointChageDeathsData():
+def getPercentilePointChageDeathsData(cases_rolling_df:pd.DataFrame() = None,
+                                      election_df:pd.DataFrame() = None):
     """
     THIS CODE creates a new county-level dataframe merged_df similar to case_rolling_df in the pevious
     section, but with COVID deaths instead of cases. It merges COVID deaths data with presidential election
@@ -164,7 +165,12 @@ def getPercentilePointChageDeathsData():
     """
 
     # Find the annual number of cases and deaths per county
-    cases_rolling_df = getCasesRollingAveragePer100K()
+    if cases_rolling_df is None:
+        cases_rolling_df = getCasesRollingAveragePer100K()
+
+    # Get county-level presidential election data
+    if election_df is None:
+        election_df = getElectionSegmentsData()
 
     cases_rolling_df = cases_rolling_df[(cases_rolling_df['date']>=pd.to_datetime('2020-01-01'))
                                   & (cases_rolling_df['date']<=pd.to_datetime('2020-12-31'))]
@@ -180,9 +186,6 @@ def getPercentilePointChageDeathsData():
         ["deaths_avg_per_100k"], ascending=False
     )
     deaths_top_100_rolling_df = cases_rolling_df[:400].copy()
-
-    # Get county-level presidential election data
-    election_df = getElectionSegmentsData()
 
     # Merge the dataframes
     merged_df = deaths_top_100_rolling_df.merge(

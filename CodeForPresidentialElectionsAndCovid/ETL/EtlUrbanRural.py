@@ -9,6 +9,7 @@ from .EtlBase import DataFolder
 from .EtlCovid import (
     getRollingCaseAverageSegmentLevel,
     getCasesRollingAveragePer100K,
+    getPercentilePointChageDeathsData,
 )
 from .EtlElection import (
     getElectionSegmentsData,
@@ -145,7 +146,14 @@ def getUrbanRuralElectionRollingData(df:pd.DataFrame()=None):
     final_df = getRollingCaseAverageSegmentLevel(case_rolling_df, urban_rural_segment_df)
     return final_df
 
-def CountyElecUrbanRuralSplit():
+def getUrbanRuralAvgDeathsData(df:pd.DataFrame()=None):
+    urban_rural_election_df = getElectionData(df)
+    urban_rural_segment_df = getElectionSegmentsData(election_winners_df=urban_rural_election_df)
+    case_rolling_df = getCasesRollingAveragePer100K()
+    final_df = getPercentilePointChageDeathsData(case_rolling_df, urban_rural_segment_df)
+    return final_df
+
+def CountyElecUrbanRuralSplit(etl_function=getUrbanRuralElectionRollingData):
     '''
     Reads in a CSV file with county-level presidential election results.
     Merges the data with the urban/rural designations of the counties.
@@ -185,9 +193,9 @@ def CountyElecUrbanRuralSplit():
     CountyPresFullUrban = CountyPresFull[CountyPresFull['UrbanRural']=='urban']
     CountyPresFullRural = CountyPresFull[CountyPresFull['UrbanRural']=='rural']
 
-    FullDF = getUrbanRuralElectionRollingData(CountyPresFull)
-    UrbanDF = getUrbanRuralElectionRollingData(CountyPresFullUrban)
-    RuralDF = getUrbanRuralElectionRollingData(CountyPresFullRural)
+    FullDF = etl_function(CountyPresFull)
+    UrbanDF = etl_function(CountyPresFullUrban)
+    RuralDF = etl_function(CountyPresFullRural)
     
     return (FullDF, UrbanDF, RuralDF)
 
