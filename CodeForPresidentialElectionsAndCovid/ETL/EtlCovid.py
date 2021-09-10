@@ -162,8 +162,8 @@ def getPercentilePointChageDeathsData():
     # Find the annual number of cases and deaths per county
     cases_rolling_df = getCasesRollingAveragePer100K()
 
-    # cases_rolling_df = cases_rolling_df[(cases_rolling_df['date']>=pd.to_datetime('2020-01-01'))
-    #                                  & (cases_rolling_df['date']<=pd.to_datetime('2020-12-31'))]
+    cases_rolling_df = cases_rolling_df[(cases_rolling_df['date']>=pd.to_datetime('2020-01-01'))
+                                  & (cases_rolling_df['date']<=pd.to_datetime('2020-12-31'))]
     cases_rolling_df = (
         cases_rolling_df.groupby("COUNTYFP")["deaths_avg_per_100k"]
         .mean()
