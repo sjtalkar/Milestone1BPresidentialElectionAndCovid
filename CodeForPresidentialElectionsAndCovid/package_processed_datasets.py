@@ -13,7 +13,8 @@ from ETL.EtlUnemployment import (getUnemploymentRateSince122019,
                                 getUnemploymentCovidCorrelationPerMonth,
                                 getJuly2020UnemploymentAndMask,
                                 getUnemploymentVaccineCorrelationPerMonth)
-from ETL.EtlUrbanRural import (MergeElectionUrbanRural)
+from ETL.EtlUrbanRural import (MergeElectionUrbanRural,
+                               CountyElecUrbanRuralSplit)
 #
 # This script runs all the functions used to processed all the datasets used in the different visualizaionts
 # It then saves all those processed datasets in files to be used in Streamlit. This is done to speed-up the loading time
@@ -80,6 +81,14 @@ if __name__ == '__main__':
     #
     # Package urban/rural dataframse
     #
-    election_urban_rural_df = MergeElectionUrbanRural()
-    election_urban_rural_df.to_csv(path_or_buf="./streamlit_data/election_urban_rural_df.csv",
+    urban_rural_election_df = MergeElectionUrbanRural()
+    urban_rural_election_df.to_csv(path_or_buf="./streamlit_data/urban_rural_election_df.csv",
                                                index=False)
+
+    urban_rural_rolling_avg_full_df, urban_rolling_avg_full_df, rural_rolling_avg_full_df = CountyElecUrbanRuralSplit()
+    urban_rural_rolling_avg_full_df.to_csv(path_or_buf="./streamlit_data/urban_rural_rolling_avg_full_df.csv",
+                                   index=False)
+    urban_rolling_avg_full_df.to_csv(path_or_buf="./streamlit_data/urban_rolling_avg_full_df.csv",
+                                   index=False)
+    rural_rolling_avg_full_df.to_csv(path_or_buf="./streamlit_data/rural_rolling_avg_full_df.csv",
+                                   index=False)

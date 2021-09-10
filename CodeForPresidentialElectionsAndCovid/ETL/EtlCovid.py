@@ -43,7 +43,8 @@ def getCDCConfirmedCasesWithAPIQuery():
     return df
 
 
-def getRollingCaseAverageSegmentLevel():
+def getRollingCaseAverageSegmentLevel(case_rolling_df:pd.DataFrame()=None,
+                                      election_winners_df:pd.DataFrame()=None):
     """
         THIS FUNCTION 1- Obtains COVID cases and deaths per 100k at the county level. Questions: From when?
                       2- Obtains presidential election results at the county level, showing the winning
@@ -66,16 +67,19 @@ def getRollingCaseAverageSegmentLevel():
 
     """
 
-    # Get rolling averages data
-    case_rolling_df = getCasesRollingAveragePer100K()
+    if (case_rolling_df is None):
+        # Get rolling averages data
+        case_rolling_df = getCasesRollingAveragePer100K()
+
+    if (election_winners_df is None):
+        # Get election results data
+        election_winners_df = getElectionSegmentsData()
 
     ### Plot all data for year 2020
     case_rolling_df = case_rolling_df[
         case_rolling_df["date"] < pd.to_datetime("2021-01-01")
     ].copy()
 
-    # Get election results data
-    election_winners_df = getElectionSegmentsData()
     case_rolling_df = case_rolling_df.merge(
         election_winners_df[["state", "COUNTYFP", "changecolor"]],
         how="inner",

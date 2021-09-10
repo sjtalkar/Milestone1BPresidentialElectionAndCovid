@@ -54,7 +54,7 @@ def createCovidConfirmedTimeseriesChart(case_rolling_df):
     base = getBaseChart(case_rolling_df, ["2020-01-01", "2020-12-31"])
 
     highlight_segment = (
-        base.mark_line(strokeWidth=2)
+        base.mark_line()
         .add_selection(radio_select)
         .encode(
             color=change_color_condition,
@@ -153,9 +153,6 @@ def getBaseChart(case_rolling_df, date_range):
             ),
         )
         .properties(width=600, height=400)
-    ).configure_title(
-        align="left",
-        anchor="start"
     )
     return base
 

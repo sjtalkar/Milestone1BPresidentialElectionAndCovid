@@ -41,7 +41,7 @@ def createPercentPointChangeAvgDeathsChart(df:pd.DataFrame() = None):
             df,
             title={
                 "text": [
-                    "Covid deaths in 2020 versus percentage point difference in votes (from 2016 to 2020)"
+                    "Covid deaths in election year (2020) versus percentage point difference in votes (from 2016 to 2020)"
                 ],
                 "subtitle": ["Select party affiliation from dropdown",],
             },
@@ -67,16 +67,13 @@ def createPercentPointChangeAvgDeathsChart(df:pd.DataFrame() = None):
         )
         .properties(height=300, width=800)
         .add_selection(selection)
-    ).configure_title(
-        align="left",
-        anchor="start"
     )
 
     mark_more_deaths_line1 = (
         alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(strokeDash=[2, 5]).encode(x="x")
     )
     mark_more_deaths_line2 = (
-        alt.Chart(pd.DataFrame({"y": [1.25]}))
+        alt.Chart(pd.DataFrame({"y": [1.13]}))
         .mark_rule(strokeDash=[2, 5])
         .encode(y="y")
     )
@@ -92,12 +89,13 @@ def createPercentPointChangeAvgDeathsChart(df:pd.DataFrame() = None):
         .encode(x="x:Q", y="y:Q", text=alt.Text("note:N"))
     )
 
-    return (
+    final_chart = (
         perc_point_deaths_chart
         + mark_more_deaths_line1
         + mark_more_deaths_line2
         + more_deaths_text
     )
+    return final_chart
 
 
 def createSankeyForAffilitionChange():
