@@ -185,7 +185,7 @@ def UrbanRuralRollingAvgCompChart(FullDF:pd.DataFrame()=None, UrbanDF:pd.DataFra
 
     if (FullDF is None) and (UrbanDF is None) and (RuralDF is None):
         # Get three county election dataframes
-        FullDF, UrbanDF, RuralDF = CountyElecUrbanRuralSplit()
+        FullDF, UrbanDF, RuralDF = CountyElecUrbanRuralSplit(getUrbanRuralElectionRollingData)
 
     # Get chart for all counties
     FullChart = UrbanRuralRollingAvgSingleChart(FullDF)
@@ -245,7 +245,7 @@ def UrbanRuralAvgDeathsCompChart(FullDF:pd.DataFrame()=None, UrbanDF:pd.DataFram
 
     if (FullDF is None) and (UrbanDF is None) and (RuralDF is None):
         # Get three county election dataframes
-        FullDF, UrbanDF, RuralDF = CountyElecUrbanRuralSplit()
+        FullDF, UrbanDF, RuralDF = CountyElecUrbanRuralSplit(getUrbanRuralAvgDeathsData)
 
     # Get chart for all counties
     FullChart = createPercentPointChangeAvgDeathsChart(FullDF)
